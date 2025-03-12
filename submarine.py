@@ -44,10 +44,12 @@ class Submarine:
         p = self.physics #assign these to shorthand variables for easier use in this function
         g = self.graphics
         #get input events for both keyboard and mouse
-        keyups, xm = g.get_events()
+        keyups, _ = g.get_events()
         #  - keyups: list of unicode numbers for keys on the keyboard that were released this cycle
         #  - pm: coordinates of the mouse on the graphics screen this cycle (x,y)      
         #get the state of the device, or otherwise simulate it if no device is connected (using the mouse position)
+        xh = g.haptic.center
+        xh = np.array(xh, dtype=np.float64) #make sure fe is a numpy array
         g.erase_screen()
 
         for key in keyups:
@@ -64,12 +66,12 @@ class Submarine:
         try:
             # Receive position
             recv_data, _ = self.recv_sock.recvfrom(1024)
-            xh = np.array(np.frombuffer(recv_data, dtype=np.float64))
+            xm = np.array(np.frombuffer(recv_data, dtype=np.float64))
             # Scale received values
-            xh *= np.array([1.142, 1.4])
-            xh[1] -= 62
+            xm *= np.array([1.142, 1.4])
+            xm[1] -= 62
             # Make sure they are pixels and the type is np array 
-            xh = np.array(xh, dtype=int)
+            xm = np.array(xm, dtype=int)
         except socket.timeout:
             pygame.quit() # stop pygame
             raise RuntimeError("Connection lost")
