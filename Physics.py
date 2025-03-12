@@ -79,9 +79,6 @@ class Physics:
         else:
             if connect_device:
                 print("[PHYSICS]: No compatible device found.")
-            else:
-                print("[PHYSICS]: No device connected.")
-
             self.device_present = False
     
     def is_device_connected(self):
