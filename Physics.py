@@ -13,7 +13,7 @@ import serial.tools.list_ports
 
 
 class Physics:
-    def __init__(self,reverse_motor_order=False,hardware_version=3):
+    def __init__(self,reverse_motor_order=False,hardware_version=3, connect_device=True):
         #return True if a device is found, False if no device is found
         CW = 0
         CCW = 1
@@ -23,7 +23,6 @@ class Physics:
         pantograph = Pantograph
         
         #########Open the connection with the arduino board#########
-        self.port = self.serial_ports()   ##port contains the communication port or False if no device
         if hardware_version==3:
             self.l1 = 0.07
             self.l2 = 0.09
@@ -33,6 +32,7 @@ class Physics:
             self.l2 = 0.09
             self.d = 0.0
         
+        self.port = self.serial_ports() if connect_device else False   ##port contains the communication port or False if no device
         if self.port:
             print("Board found on port %s"%self.port[0])
             self.haplyBoard = Board("test", self.port[0], 0)

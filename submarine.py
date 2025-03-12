@@ -12,7 +12,7 @@ from Graphics_submarine import Graphics
 
 class Submarine:
     def __init__(self):
-        self.physics = Physics(hardware_version=3) #setup physics class. Returns a boolean indicating if a device is connected
+        self.physics = Physics(hardware_version=3, connect_device=False) #setup physics class. Returns a boolean indicating if a device is connected
         self.graphics = Graphics(False) #setup class for drawing and graphics.
         self.send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

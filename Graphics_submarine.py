@@ -11,7 +11,7 @@ import time
 import sys 
 
 class Graphics:
-    def __init__(self,device_connected,window_size=(600,400)):
+    def __init__(self,device_connected,window_size=(800,600)):
         self.device_connected = device_connected
         
         #initialize pygame window
@@ -195,7 +195,7 @@ class Graphics:
         ##Print status in  overlay
         if self.show_debug:    
             self.debug_text += "FPS = " + str(round(self.clock.get_fps()))+" "
-            self.debug_text += "fe: "+str(np.round(f[0],1))+","+str(np.round(f[1],1))+"] "
+            self.debug_text += "fe: ["+str(np.round(f[0],1))+","+str(np.round(f[1],1))+"] "
             self.debug_text += "xh: ["+str(np.round(pE[0],1))+","+str(np.round(pE[1],1))+"]"
             self.text = self.font.render(self.debug_text, True, (0, 0, 0), (255, 255, 255))
             self.window.blit(self.text, self.textRect)
