@@ -81,8 +81,8 @@ class PA:
         try:
             recv_data, _ = self.recv_sock.recvfrom(1024)
             fe = np.frombuffer(recv_data, dtype=np.float32)
-            # Scale the feed back to make it stable
-            fe = np.array(fe/15, dtype=np.float32)
+            # TODO: Scale the feedback to make it stable
+            fe = np.array(fe, dtype=np.float32)
         except socket.timeout:
             raise RuntimeError("Connection lost")
 

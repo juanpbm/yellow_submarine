@@ -67,9 +67,7 @@ class Submarine:
             # Receive position
             recv_data, _ = self.recv_sock.recvfrom(1024)
             xm = np.array(np.frombuffer(recv_data, dtype=np.float64))
-            # Scale received values
-            xm *= np.array([1.142, 1.4])
-            xm[1] -= 62
+            # TODO: Scale received values
             # Make sure they are pixels and the type is np array 
             xm = np.array(xm, dtype=int)
         except socket.timeout:
@@ -77,7 +75,8 @@ class Submarine:
             raise RuntimeError("Connection lost")
 
         # Send force
-        fe = np.array([0.0,0.0], dtype=np.float32)
+        fe = -50 * (((350,250) - xm) / g.window_scale) 
+        fe = np.array(fe, dtype=np.float32)
         self.send_sock.sendto(fe.tobytes(), ("127.0.0.1", 40001))
 
         xh = g.sim_forces(xh,fe,xm,mouse_k=0.5,mouse_b=0.8) #simulate forces with mouse haptics

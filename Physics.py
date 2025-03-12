@@ -77,7 +77,11 @@ class Physics:
                     print("[PHYSICS]: Haply found and data available. Ready to run!")
                     break
         else:
-            print("[PHYSICS]: No compatible device found.")
+            if connect_device:
+                print("[PHYSICS]: No compatible device found.")
+            else:
+                print("[PHYSICS]: No device connected.")
+
             self.device_present = False
     
     def is_device_connected(self):
