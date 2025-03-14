@@ -7,7 +7,7 @@ import socket
 from Physics import Physics
 from Graphics_operator import Graphics
 
-class PA:
+class RemoteOperator:
     def __init__(self):
         self.physics = Physics(hardware_version=3) #setup physics class. Returns a boolean indicating if a device is connected
         self.device_connected = self.physics.is_device_connected() #returns True if a connected haply device was found
@@ -107,17 +107,15 @@ class PA:
         g.render(pA0,pB0,pA,pB,xh,fe,xm)
         
     def close(self):
-        ##############################################
-        #ADD things here that you want to run right before the program ends!
-        
-        ##############################################
         self.graphics.close()
         self.physics.close()
+        self.send_sock.close()
+        self.recv_sock.close()
 
 if __name__=="__main__":
-    pa = PA()
+    operator = RemoteOperator()
     try:
         while True:
-            pa.run()
+            operator.run()
     finally:
-        pa.close()
+        operator.close()

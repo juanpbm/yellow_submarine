@@ -20,6 +20,10 @@ class Submarine:
         print("Waiting for operator communication")
         i = 0
         while True:
+            for event in pygame.event.get():  # Handle events to keep the window responsive
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit(0)
             try: 
                 self.send_sock.sendto(np.array([0,0], dtype=np.float32).tobytes(), ("127.0.0.1", 40001))
                 _ = self.recv_sock.recvfrom(1024)
@@ -36,22 +40,10 @@ class Submarine:
         p = self.physics #assign these to shorthand variables for easier use in this function
         g = self.graphics
         #get input events for both keyboard and mouse
-        keyups = g.get_events()
-        xh = g.haptic.center
+        g.get_events()
         xs = np.array(g.submarine_pos)
-        xh = np.array(xh, dtype=np.float64) #make sure fe is a numpy array
+        xh = np.array(g.haptic.center, dtype=np.float64) #make sure fe is a numpy array
         g.erase_screen()
-        
-        # TODO: maybe keys not needed here 
-        for key in keyups:
-            if key==ord("q"): #q for quit, ord() gets the unicode of the given character
-                sys.exit(0) #raises a system exit exception so the "PA.close()" function will still execute
-            if key == ord('m'): #Change the visibility of the mouse
-                pygame.mouse.set_visible(not pygame.mouse.get_visible())
-            if key == ord('r'): #Change the visibility of the linkages
-                g.show_linkages = not g.show_linkages
-            if key == ord('d'): #Change the visibility of the debug text
-                g.show_debug = not g.show_debug
         
         try:
             # Receive position
@@ -68,8 +60,8 @@ class Submarine:
             pygame.quit() # stop pygame
             raise RuntimeError("Connection lost")
 
+        # TODO: Calculate forces for feedback
         # Send force
-        # fe = -50 * (((350,250) - xm) / g.window_scale) 
         fe = np.array([0,0], dtype=np.float32)
         self.send_sock.sendto(fe.tobytes(), ("127.0.0.1", 40001))
 
@@ -86,6 +78,8 @@ class Submarine:
     def close(self):
         self.graphics.close()
         self.physics.close()
+        self.send_sock.close()
+        self.recv_sock.close()
 
 if __name__=="__main__":
     submarine = Submarine()

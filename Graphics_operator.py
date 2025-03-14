@@ -103,6 +103,7 @@ class Graphics:
         keypress = []
         for event in events:
             if event.type == pygame.QUIT: #close window button was pressed
+                pygame.quit()
                 sys.exit(0) #raises a system exit exception so any Finally will actually execute
             elif event.type == pygame.KEYUP:
                 keyups.append(event.key)

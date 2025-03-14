@@ -110,7 +110,6 @@ class Graphics:
         #########Process events  (Mouse, Keyboard etc...)#########
         events = pygame.event.get()
         keyups = []
-        keypress = []
         for event in events:
             if event.type == pygame.QUIT: #close window button was pressed
                 sys.exit(0) #raises a system exit exception so any Finally will actually execute
@@ -224,10 +223,10 @@ class Graphics:
     
     def show_loading_screen(self, i=0):
         # Show Intro message
-        if (i % 5000 == 0):
+        if (i % 15000 == 0):
             self.window.fill(self.cBlack)
             dots_cycle = ["", ".", "..", "...", "....", ".....", "......", ".......","........", ".........",".........."]
-            init_text = "WAITING FOR COMMUNICATION: " + dots_cycle[((i//5000) % 11)]
+            init_text = "WAITING FOR COMMUNICATION: " + dots_cycle[((i//15000) % 11)]
             init_font = pygame.font.Font('freesansbold.ttf', 35)
             init_text = init_font.render(init_text, True, (0, 255, 0), (0, 0, 0))
             init_text_rect = init_text.get_rect()
