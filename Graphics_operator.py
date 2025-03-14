@@ -47,6 +47,8 @@ class Graphics:
         self.cDarkblue = (36,90,190)
         self.cLightblue = (0,176,240)
         self.cRed = (255,0,0)
+        self.cBlack = (0,0,0)
+        self.cGreen = (0,255,0)
         self.cOrange = (255,100,0)
         self.cYellow = (255,255,0)
         
@@ -105,14 +107,17 @@ class Graphics:
         #########Process events  (Mouse, Keyboard etc...)#########
         events = pygame.event.get()
         keyups = []
+        keypress = []
         for event in events:
             if event.type == pygame.QUIT: #close window button was pressed
                 sys.exit(0) #raises a system exit exception so any Finally will actually execute
             elif event.type == pygame.KEYUP:
                 keyups.append(event.key)
-        
+
+        keypress = pygame.key.get_pressed()
         mouse_pos = pygame.mouse.get_pos()
-        return keyups, mouse_pos
+        
+        return keyups, mouse_pos, keypress
 
     def sim_forces(self,pE,f,pM,mouse_k=None,mouse_b=None):
         #simulated device calculations
@@ -206,6 +211,30 @@ class Graphics:
         pygame.display.flip()    
         ##Slow down the loop to match FPS
         self.clock.tick(self.FPS)
+
+    def show_loading_screen(self, started = False, i=0):
+        # Show Intro message
+        if(not started):
+            init_text = "PRESS SPACE BAR TO BEGIN"
+            init_font = pygame.font.Font('freesansbold.ttf', 30)
+            init_text = init_font.render(init_text, True, self.cGreen, self.cBlack)
+            init_text_rect = init_text.get_rect()
+            init_text_rect.center = (350, 250)
+            self.window.blit(init_text, init_text_rect)
+            pygame.display.flip()
+            
+        else:
+            if (i % 2500 == 0):
+                self.window.fill(self.cBlack)
+                dots_cycle = ["", ".", "..", "...", "....", ".....", "......", ".......","........", ".........",".........."]
+                init_text = "WAITING FOR COMMUNICATION: " + dots_cycle[((i//2500) % 11)]
+                init_font = pygame.font.Font('freesansbold.ttf', 10)
+                init_text = init_font.render(init_text, True, (0, 255, 0), (0, 0, 0))
+                init_text_rect = init_text.get_rect()
+                init_text_rect.topleft = (100, 300)
+                self.window.blit(init_text, init_text_rect)
+                pygame.display.flip()  
+
 
     def close(self):
         pygame.display.quit()

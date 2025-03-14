@@ -5,7 +5,7 @@ import time
 import numpy as np
 import pygame
 import socket
-import subprocess
+
 
 
 from Physics import Physics
@@ -13,22 +13,12 @@ from Graphics_submarine import Graphics
 
 class Submarine:
     def __init__(self):
-        subprocess.Popen(["python", "operator.py", "&"])
         self.physics = Physics(hardware_version=0, connect_device=False) #setup physics class. Returns a boolean indicating if a device is connected
         self.graphics = Graphics(False) #setup class for drawing and graphics.
         self.send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock.bind(("127.0.0.1", 40002))
         self.recv_sock.setblocking(False)
-        
-        # Wait for user input
-        self.graphics.show_loading_screen()
-        run = True
-        while run:
-            keyups, _ = self.graphics.get_events()
-            for key in keyups:
-                if key== pygame.K_SPACE:
-                    run = False
 
         # Wait for at least one message from the master. Only continue once something is received.
         print("Waiting for operator communication")
@@ -42,8 +32,7 @@ class Submarine:
                 print("Connected")
                 break
             except BlockingIOError:
-                self.graphics.erase_screen()
-                self.graphics.show_loading_screen(True, i)
+                self.graphics.show_loading_screen(i)
                 i += 1
                 pass
     
@@ -51,7 +40,7 @@ class Submarine:
         p = self.physics #assign these to shorthand variables for easier use in this function
         g = self.graphics
         #get input events for both keyboard and mouse
-        keyups, keypressed = g.get_events()
+        keyups = g.get_events()
         #  - keyups: list of unicode numbers for keys on the keyboard that were released this cycle
         #  - pm: coordinates of the mouse on the graphics screen this cycle (x,y)      
         #get the state of the device, or otherwise simulate it if no device is connected (using the mouse position)
@@ -69,17 +58,15 @@ class Submarine:
                 g.show_linkages = not g.show_linkages
             if key == ord('d'): #Change the visibility of the debug text
                 g.show_debug = not g.show_debug
-            
-        if keypressed[pygame.K_LEFT]:
-            xs[0] = np.clip(xs[0] - 1, 0, g.window_size[0] - 150)
-        if keypressed[pygame.K_RIGHT]:
-            xs[0] = np.clip(xs[0] + 1, 0, g.window_size[0] - 150)
-
         
         try:
             # Receive position
             recv_data, _ = self.recv_sock.recvfrom(1024)
-            xm = np.array(np.frombuffer(recv_data, dtype=np.float64))
+            data = np.array(np.frombuffer(recv_data, dtype=np.float64))
+            print(data)
+            xm = data[:2]
+            xs = data[2:]
+            print(xm,xs)
             # TODO: Scale received values
             xm[0] = np.clip((xm[0] + ((g.submarine_pos[0] + 150) - (g.window_size[0]/2))), -100, g.window_size[0] + 100)
             xm[1] = np.clip(((xm[1] + 20) * 1.2), 0, g.window_size[1] + 75)

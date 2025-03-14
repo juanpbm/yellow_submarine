@@ -5,12 +5,14 @@ import time
 import numpy as np
 import pygame
 import socket
+import subprocess
 
 from Physics import Physics
 from Graphics_operator import Graphics
 
 class PA:
     def __init__(self):
+        # subprocess.Popen(["python", "submarine.py", "&&"])
         self.physics = Physics(hardware_version=3) #setup physics class. Returns a boolean indicating if a device is connected
         self.device_connected = self.physics.is_device_connected() #returns True if a connected haply device was found
         self.graphics = Graphics(self.device_connected) #setup class for drawing and graphics.
@@ -20,9 +22,21 @@ class PA:
         self.recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock.bind(("127.0.0.1", 40001))
         self.recv_sock.setblocking(False)
-                        
+
+        self.xs = np.array([320, 10], dtype=np.float64) # initial submarine pos 
+
+        
+        self.graphics.show_loading_screen()
+        run = True
+        while run:
+            keyups, _, _= self.graphics.get_events()
+            for key in keyups:
+                if key== pygame.K_SPACE:
+                    run = False 
+
         # Wait for at least one message from the master. Only continue once something is received.
         print("Waiting for submarine communication")
+        i = 0
         while True:
             try: 
                 _= self.recv_sock.recvfrom(1024)
@@ -31,7 +45,8 @@ class PA:
                 self.recv_sock.settimeout(1)
                 break
             except BlockingIOError:
-                pass
+                self.graphics.show_loading_screen(True, i)
+                i += 1
             
         ##############################################
     
@@ -39,7 +54,7 @@ class PA:
         p = self.physics #assign these to shorthand variables for easier use in this function
         g = self.graphics
         #get input events for both keyboard and mouse
-        keyups,xm = g.get_events()
+        keyups, xm, keypressed = g.get_events()
         #  - keyups: list of unicode numbers for keys on the keyboard that were released this cycle
         #  - pm: coordinates of the mouse on the graphics screen this cycle (x,y)      
         #get the state of the device, or otherwise simulate it if no device is connected (using the mouse position)
@@ -52,6 +67,7 @@ class PA:
             #This previous position will be compared to the mouse position to pull the endpoint towards the mouse
         fe = np.array([0.0,0.0]) #fx,fy
         xh = np.array(xh, dtype=np.float64) #make sure fe is a numpy array
+
         # xc,yc = g.screenVR.get_rect().center
         g.erase_screen()
         ##############################################
@@ -65,9 +81,14 @@ class PA:
                 g.show_linkages = not g.show_linkages
             if key == ord('d'): #Change the visibility of the debug text
                 g.show_debug = not g.show_debug
+        if keypressed[pygame.K_LEFT]:
+            self.xs[0] = np.clip(self.xs[0] - 1, 0, 800 - 150)
+        if keypressed[pygame.K_RIGHT]:
+            self.xs[0] = np.clip(self.xs[0] + 1, 0, 800 - 150)
 
+        message = np.array([xh, self.xs])
         # Send Position from the haptic device or mouse 
-        self.send_sock.sendto(xh.tobytes(), ("127.0.0.1", 40002))
+        self.send_sock.sendto(message.tobytes(), ("127.0.0.1", 40002))
 
         # Receive Force feedback
         try:
