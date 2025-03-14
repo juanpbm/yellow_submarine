@@ -44,14 +44,15 @@ class Submarine:
         p = self.physics #assign these to shorthand variables for easier use in this function
         g = self.graphics
         #get input events for both keyboard and mouse
-        keyups, _ = g.get_events()
+        keyups, keypressed = g.get_events()
         #  - keyups: list of unicode numbers for keys on the keyboard that were released this cycle
         #  - pm: coordinates of the mouse on the graphics screen this cycle (x,y)      
         #get the state of the device, or otherwise simulate it if no device is connected (using the mouse position)
         xh = g.haptic.center
+        xs = np.array(g.submarine_pos)
         xh = np.array(xh, dtype=np.float64) #make sure fe is a numpy array
         g.erase_screen()
-
+        
         for key in keyups:
             if key==ord("q"): #q for quit, ord() gets the unicode of the given character
                 sys.exit(0) #raises a system exit exception so the "PA.close()" function will still execute
@@ -61,7 +62,11 @@ class Submarine:
                 g.show_linkages = not g.show_linkages
             if key == ord('d'): #Change the visibility of the debug text
                 g.show_debug = not g.show_debug
-            # TODO: Add more keys
+            
+        if keypressed[pygame.K_LEFT]:
+            xs[0] -= 1
+        if keypressed[pygame.K_RIGHT]:
+            xs[0] += 1
         
         try:
             # Receive position
@@ -82,8 +87,12 @@ class Submarine:
         xh = g.sim_forces(xh,fe,xm,mouse_k=0.5,mouse_b=0.8) #simulate forces with mouse haptics
         pos_phys = g.inv_convert_pos(xh)
         pA0,pB0,pA,pB,pE = p.derive_device_pos(pos_phys) #derive the pantograph joint positions given some endpoint position
+        pB0 = pA0
+        pA = (pA[0] / 3, pA[1] / 3)
+        pB = (pB[0] / 4, pB[1] / 4)
+        pE = (pE[0] / 2, pE[1])
         pA0,pB0,pA,pB,xh = g.convert_pos(pA0,pB0,pA,pB,pE) #convert the physical positions to screen coordinates
-        g.render(pA0,pB0,pA,pB,xh,fe,xm)
+        g.render(pA0,pB0,pA,pB,xh,fe,xm, xs)
         
     def close(self):
         self.graphics.close()

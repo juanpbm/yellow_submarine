@@ -22,7 +22,7 @@ class Graphics:
 
         self.screenHaptics = pygame.Surface(self.window_size)
         ##add nice icon from https://www.flaticon.com/authors/vectors-market
-        self.icon = pygame.image.load('robot.png')
+        self.icon = pygame.image.load('imgs/robot.png')
         pygame.display.set_icon(self.icon)
 
         ##add text on top to debugToggle the timing and forces
@@ -31,7 +31,7 @@ class Graphics:
         pygame.mouse.set_visible(True)     ##Hide cursor by default. 'm' toggles it
          
         ##set up the on-screen debugToggle
-        self.text = self.font.render('Virtual Haptic Device', True, (0, 0, 0),(255, 255, 255))
+        self.text = self.font.render('Operator', True, (0, 0, 0),(255, 255, 255))
         self.textRect = self.text.get_rect()
         self.textRect.topleft = (10, 10)
 
@@ -47,7 +47,7 @@ class Graphics:
         self.cOrange = (255,100,0)
         self.cYellow = (255,255,0)
         
-        self.hhandle = pygame.image.load('handle.png') #
+        self.hhandle = pygame.image.load('imgs/handle.png') #
         
         self.haptic_width = 48
         self.haptic_height = 48

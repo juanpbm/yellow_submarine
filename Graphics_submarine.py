@@ -23,7 +23,7 @@ class Graphics:
         self.screenHaptics = pygame.Surface(self.window_size)
 
         ##add nice icon from https://www.flaticon.com/authors/vectors-market
-        self.icon = pygame.image.load('robot.png')
+        self.icon = pygame.image.load('imgs/robot.png')
         pygame.display.set_icon(self.icon)
 
         ##add text on top to debugToggle the timing and forces
@@ -32,7 +32,7 @@ class Graphics:
         pygame.mouse.set_visible(True)     ##Hide cursor by default. 'm' toggles it
          
         ##set up the on-screen debugToggle
-        self.text = self.font.render('Virtual Haptic Device', True, (0, 0, 0),(255, 255, 255))
+        self.text = self.font.render('Submarine', True, (0, 0, 0),(255, 255, 255))
         self.textRect = self.text.get_rect()
         self.textRect.topleft = (10, 10)
 
@@ -48,7 +48,7 @@ class Graphics:
         self.cOrange = (255,100,0)
         self.cYellow = (255,255,0)
         
-        self.hhandle = pygame.image.load('handle.png') #
+        self.hhandle = pygame.image.load('imgs/handle.png') #
         
         self.haptic_width = 48
         self.haptic_height = 48
@@ -56,12 +56,20 @@ class Graphics:
         self.effort_cursor  = pygame.Rect(*self.haptic.center, 0, 0).inflate(self.haptic_width, self.haptic_height) 
         self.colorHaptic = self.cOrange ##color of the wall
 
+        # Make submarine
+        # image taken from https://www.cleanpng.com/png-yellow-submarine-clip-art-submarine-biomass-vector-1902493/
+        self.submarine_left = pygame.transform.scale(pygame.image.load('imgs/yellow_submarine_left.png'), (150, 100))
+        self.submarine_right = pygame.transform.scale(pygame.image.load('imgs/yellow_submarine_right.png'), (150, 100))
+        self.submarine_dir = self.submarine_left
+
         ####Pseudo-haptics dynamic parameters, k/b needs to be <1
         self.sim_k = 0.5 #0.1#0.5       ##Stiffness between cursor and haptic display
         self.sim_b = 0.8 #1.5#0.8       ##Viscous of the pseudohaptic display
         
+        # initial position
         self.window_scale = 3000 #2500 #pixels per meter
-        self.device_origin = (int(self.window_size[0]/2.0 + 0.038/2.0*self.window_scale),0)
+        self.submarine_pos = (int(self.window_size[0]/2.0 - 80),0)
+        self.device_origin = (int(self.window_size[0]/2.0), 100)
         
         self.show_linkages = True
         self.show_debug = True
@@ -72,6 +80,8 @@ class Graphics:
         # |
         # |
         # v +Y
+        # Scale Device
+
         converted_positions = []
         for physics_pos in positions:
             x = self.device_origin[0]-physics_pos[0]*self.window_scale
@@ -84,6 +94,7 @@ class Graphics:
         else:
             return converted_positions
         return [x,y]
+    
     def inv_convert_pos(self,*positions):
         #convert screen positions back into physical positions
         converted_positions = []
@@ -103,14 +114,16 @@ class Graphics:
         #########Process events  (Mouse, Keyboard etc...)#########
         events = pygame.event.get()
         keyups = []
+        keypress = []
         for event in events:
             if event.type == pygame.QUIT: #close window button was pressed
                 sys.exit(0) #raises a system exit exception so any Finally will actually execute
             elif event.type == pygame.KEYUP:
                 keyups.append(event.key)
+                
+        keypress = pygame.key.get_pressed()
         
-        mouse_pos = pygame.mouse.get_pos()
-        return keyups, mouse_pos
+        return keyups, keypress
 
     def sim_forces(self,pE,f,pM,mouse_k=None,mouse_b=None):
         #simulated device calculations
@@ -157,7 +170,7 @@ class Graphics:
         self.screenHaptics.fill(self.cWhite) #erase the haptics surface
         self.debug_text = ""
     
-    def render(self,pA0,pB0,pA,pB,pE,f,pM):
+    def render(self,pA0,pB0,pA,pB,pE,f,pM, pS):
         ###################Render the Haptic Surface###################
         #set new position of items indicating the endpoint location
         self.haptic.center = pE #the hhandle image and effort square will also use this position for drawing
@@ -172,21 +185,30 @@ class Graphics:
         ######### Robot visualization ###################
         if self.show_linkages:
             pantographColor = (150,150,150)
-            pygame.draw.lines(self.screenHaptics, pantographColor, False,[pA0,pA],15)
-            pygame.draw.lines(self.screenHaptics, pantographColor, False,[pB0,pB],15)
-            pygame.draw.lines(self.screenHaptics, pantographColor, False,[pA,pE],15)
-            pygame.draw.lines(self.screenHaptics, pantographColor, False,[pB,pE],15)
+            pygame.draw.lines(self.screenHaptics, pantographColor, False,[pA0,pA],5)
+            pygame.draw.lines(self.screenHaptics, pantographColor, False,[pB0,pB],5)
+            pygame.draw.lines(self.screenHaptics, pantographColor, False,[pA,pE],5)
+            pygame.draw.lines(self.screenHaptics, pantographColor, False,[pB,pE],5)
             
             for p in ( pA0,pB0,pA,pB,pE):
-                pygame.draw.circle(self.screenHaptics, (0, 0, 0),p, 15)
-                pygame.draw.circle(self.screenHaptics, (200, 200, 200),p, 6)
+                pygame.draw.circle(self.screenHaptics, (0, 0, 0),p, 5)
+                pygame.draw.circle(self.screenHaptics, (200, 200, 200),p, 2)
         
         ### Hand visualisation
         self.screenHaptics.blit(self.hhandle,self.effort_cursor)
         
         #pygame.draw.line(self.screenHaptics, (0, 0, 0), (self.haptic.center),(self.haptic.center+2*k*(xm-xh)))
         
-        
+        # Submarine 
+        if self.submarine_pos[0] < pS[0]:
+            self.submarine_dir = self.submarine_right
+        elif self.submarine_pos[0] > pS[0]:
+            self.submarine_dir = self.submarine_left
+            
+        self.submarine_pos = tuple(pS)
+        self.device_origin = (pS[0] + 75, pS[1] + 100)
+        self.screenHaptics.blit(self.submarine_dir, self.submarine_pos)
+
         if not self.device_connected:
             pygame.draw.lines(self.screenHaptics, (0,0,0), False,[self.effort_cursor.center,pM],2)
         ##Fuse it back together
