@@ -5,6 +5,7 @@ import time
 import numpy as np
 import pygame
 import socket
+import subprocess
 
 
 from Physics import Physics
@@ -12,6 +13,7 @@ from Graphics_submarine import Graphics
 
 class Submarine:
     def __init__(self):
+        subprocess.Popen(["python", "operator.py", "&"])
         self.physics = Physics(hardware_version=0, connect_device=False) #setup physics class. Returns a boolean indicating if a device is connected
         self.graphics = Graphics(False) #setup class for drawing and graphics.
         self.send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -20,6 +22,7 @@ class Submarine:
         self.recv_sock.setblocking(False)
         
         # Wait for user input
+        self.graphics.show_loading_screen()
         run = True
         while run:
             keyups, _ = self.graphics.get_events()
@@ -28,16 +31,20 @@ class Submarine:
                     run = False
 
         # Wait for at least one message from the master. Only continue once something is received.
+        print("Waiting for operator communication")
+        i = 0
         while True:
             try: 
                 self.send_sock.sendto(np.array([0,0], dtype=np.float32).tobytes(), ("127.0.0.1", 40001))
                 _ = self.recv_sock.recvfrom(1024)
                 # Set a timeout to allow closing the window automatically when the communication is broken
                 self.recv_sock.settimeout(1)
-                print("Got UDP message")
+                print("Connected")
                 break
             except BlockingIOError:
-                print("Waiting for UDP communication")
+                self.graphics.erase_screen()
+                self.graphics.show_loading_screen(True, i)
+                i += 1
                 pass
     
     def run(self):

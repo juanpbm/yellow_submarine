@@ -10,6 +10,7 @@ import numpy as np
 import time
 import sys 
 import os
+import itertools
 
 class Graphics:
     def __init__(self,device_connected,window_size=(800,600)):
@@ -25,7 +26,7 @@ class Graphics:
         self.screenHaptics = pygame.Surface(self.window_size)
 
         ##add nice icon from https://www.flaticon.com/authors/vectors-market
-        self.icon = pygame.image.load('imgs/robot.png')
+        self.icon = pygame.image.load('imgs/yellow_submarine_left.png')
         pygame.display.set_icon(self.icon)
 
         ##add text on top to debugToggle the timing and forces
@@ -36,7 +37,7 @@ class Graphics:
         ##set up the on-screen debugToggle
         self.text = self.font.render('Submarine', True, (0, 0, 0),(255, 255, 255))
         self.textRect = self.text.get_rect()
-        self.textRect.topleft = (10, 10)
+        self.textRect.topleft = (10, 10) 
 
         ##initialize "real-time" clock
         self.clock = pygame.time.Clock()
@@ -47,6 +48,8 @@ class Graphics:
         self.cDarkblue = (36,90,190)
         self.cLightblue = (0,176,240)
         self.cRed = (255,0,0)
+        self.cBlack = (0,0,0)
+        self.cGreen = (0,255,0)
         self.cOrange = (255,100,0)
         self.cYellow = (255,255,0)
         
@@ -226,6 +229,30 @@ class Graphics:
         pygame.display.flip()    
         ##Slow down the loop to match FPS
         self.clock.tick(self.FPS)
+    
+    def show_loading_screen(self, started = False, i=0):
+        # Show Intro message
+        if(not started):
+            init_text = "PRESS SPACE BAR TO BEGIN"
+            init_font = pygame.font.Font('freesansbold.ttf', 50)
+            init_text = init_font.render(init_text, True, self.cGreen, self.cBlack)
+            init_text_rect = init_text.get_rect()
+            init_text_rect.center = (400, 300)
+            self.window.blit(init_text, init_text_rect)
+            pygame.display.flip()
+            
+        else:
+            if (i % 2500 == 0):
+                self.window.fill(self.cBlack)
+                dots_cycle = ["", ".", "..", "...", "....", ".....", "......", ".......","........", ".........",".........."]
+                init_text = "WAITING FOR COMMUNICATION: " + dots_cycle[((i//2500) % 11)]
+                init_font = pygame.font.Font('freesansbold.ttf', 20)
+                init_text = init_font.render(init_text, True, (0, 255, 0), (0, 0, 0))
+                init_text_rect = init_text.get_rect()
+                init_text_rect.topleft = (100, 300)
+                self.window.blit(init_text, init_text_rect)
+                pygame.display.flip()  
+
 
     def close(self):
         pygame.display.quit()
