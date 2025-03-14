@@ -68,8 +68,8 @@ class Graphics:
         
         # initial position
         self.window_scale = 3000 #2500 #pixels per meter
-        self.submarine_pos = (int(self.window_size[0]/2.0 - 80),0)
-        self.device_origin = (int(self.window_size[0]/2.0), 100)
+        self.submarine_pos = (int(self.window_size[0]/2.0 - 80), 10)
+        self.device_origin = (int(self.window_size[0]/2.0), 110)
         
         self.show_linkages = True
         self.show_debug = True
@@ -120,7 +120,7 @@ class Graphics:
                 sys.exit(0) #raises a system exit exception so any Finally will actually execute
             elif event.type == pygame.KEYUP:
                 keyups.append(event.key)
-                
+
         keypress = pygame.key.get_pressed()
         
         return keyups, keypress
@@ -184,11 +184,10 @@ class Graphics:
 
         ######### Robot visualization ###################
         if self.show_linkages:
-            pantographColor = (150,150,150)
-            pygame.draw.lines(self.screenHaptics, pantographColor, False,[pA0,pA],5)
-            pygame.draw.lines(self.screenHaptics, pantographColor, False,[pB0,pB],5)
-            pygame.draw.lines(self.screenHaptics, pantographColor, False,[pA,pE],5)
-            pygame.draw.lines(self.screenHaptics, pantographColor, False,[pB,pE],5)
+            pygame.draw.lines(self.screenHaptics, self.cYellow, False,[pA0,pA],5)
+            pygame.draw.lines(self.screenHaptics, self.cYellow, False,[pB0,pB],5)
+            pygame.draw.lines(self.screenHaptics, self.cYellow, False,[pA,pE],5)
+            pygame.draw.lines(self.screenHaptics, self.cYellow, False,[pB,pE],5)
             
             for p in ( pA0,pB0,pA,pB,pE):
                 pygame.draw.circle(self.screenHaptics, (0, 0, 0),p, 5)
