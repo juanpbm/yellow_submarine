@@ -26,7 +26,11 @@ class Physics:
         if hardware_version==3:
             self.l1 = 0.07
             self.l2 = 0.09
-            self.d = 0.038
+            self.d = 0.0
+        elif hardware_version==0:
+            self.l1 = 0.08
+            self.l2 = 0.09
+            self.d = 0.0
         else:
             self.l1 = 0.07
             self.l2 = 0.09

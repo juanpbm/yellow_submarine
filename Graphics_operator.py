@@ -9,13 +9,16 @@ import numpy as np
 #from serial.tools import list_ports
 import time
 import sys
+import os
 
 class Graphics:
     def __init__(self,device_connected,window_size=(700,500)):
         self.device_connected = device_connected
         
         #initialize pygame window
-        self.window_size = window_size #default (600,400)
+        self.window_size = window_size
+        os.environ['SDL_VIDEO_WINDOW_POS'] = "830,150"
+
         pygame.init()
         self.window = pygame.display.set_mode((window_size[0], window_size[1]))   ##twice 600x400 for haptic and VR
         pygame.display.set_caption('Operator')
@@ -60,7 +63,7 @@ class Graphics:
         self.sim_b = 0.8 #1.5#0.8       ##Viscous of the pseudohaptic display
         
         self.window_scale = 3000 #2500 #pixels per meter
-        self.device_origin = (int(self.window_size[0]/2.0 + 0.038/2.0*self.window_scale),0)
+        self.device_origin = (int(self.window_size[0]/2.0),0)
         
         self.show_linkages = True
         self.show_debug = True

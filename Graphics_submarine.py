@@ -9,6 +9,7 @@ import numpy as np
 #from serial.tools import list_ports
 import time
 import sys 
+import os
 
 class Graphics:
     def __init__(self,device_connected,window_size=(800,600)):
@@ -16,6 +17,7 @@ class Graphics:
         
         #initialize pygame window
         self.window_size = window_size #default (600,400)
+        os.environ['SDL_VIDEO_WINDOW_POS'] = "20,100"
         pygame.init()
         self.window = pygame.display.set_mode((window_size[0], window_size[1]))   ##twice 600x400 for haptic and VR
         pygame.display.set_caption('Yellow Submarine')
@@ -205,7 +207,7 @@ class Graphics:
             self.submarine_dir = self.submarine_left
             
         self.submarine_pos = tuple(pS)
-        self.device_origin = (pS[0] + 75, pS[1] + 100)
+        self.device_origin = (pS[0] + 75, pS[1] + 90)
         self.screenHaptics.blit(self.submarine_dir, self.submarine_pos)
 
         if not self.device_connected:

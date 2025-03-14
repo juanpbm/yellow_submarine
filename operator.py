@@ -20,14 +20,6 @@ class PA:
         self.recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock.bind(("127.0.0.1", 40001))
         self.recv_sock.setblocking(False)
-
-        #Wait for user input
-        run = True
-        while run:
-            keyups, _ = self.graphics.get_events()
-            for key in keyups:
-                if key== ord('e'):
-                    run = False
                         
         # Wait for at least one message from the master. Only continue once something is received.
         while True:
@@ -35,7 +27,7 @@ class PA:
                 _= self.recv_sock.recvfrom(1024)
                 print("Got UDP message")
                 # Set a timeout to allow closing the window automatically when the communication is broken
-                self.recv_sock.settimeout(5)
+                self.recv_sock.settimeout(1)
                 break
             except BlockingIOError:
                 print("Waiting for UDP communication")
