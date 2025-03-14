@@ -94,6 +94,8 @@ class RemoteOperator:
             # TODO: Scale the feedback to make it stable
             fe = np.array(fe, dtype=np.float32)
         except socket.timeout:
+            # TODO: why is it not triggering this 
+            pygame.quit()
             raise RuntimeError("Connection lost")
 
         ##############################################

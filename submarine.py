@@ -52,7 +52,7 @@ class Submarine:
             xm = data[:2]
             # Scale end effector position
             xm[0] = np.clip((xm[0] + ((g.submarine_pos[0] + 177) - (g.window_size[0]/2))), -100, g.window_size[0] + 100)
-            xm[1] = np.clip(((xm[1] + 20) * 1.2), 0, g.window_size[1] + 75)
+            xm[1] = np.clip((xm[1] * 1.3), 0, g.window_size[1] + 75)
             # Make sure they are pixels and the type is np array 
             xm = np.array(xm, dtype=int)
             xs = np.array(data[2:], dtype=int)
@@ -73,7 +73,7 @@ class Submarine:
         pB = (pB[0] / 4, pB[1] / 4)
         pE = (pE[0] / 2, pE[1])
         pA0,pB0,pA,pB,xh = g.convert_pos(pA0,pB0,pA,pB,pE) #convert the physical positions to screen coordinates
-        g.render(pA0,pB0,pA,pB,xh,fe,xm, xs)
+        g.render(pA0,pB0,pA,pB,xh,fe,xm,xs)
         
     def close(self):
         self.graphics.close()
