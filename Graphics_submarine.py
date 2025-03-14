@@ -45,7 +45,7 @@ class Graphics:
         self.cOrange = (255,100,0)
         self.cYellow = (255,255,0)
         
-        self.hhandle = pygame.image.load('imgs/handle.png') #
+        self.hhandle = pygame.image.load('imgs/hand.png') #
         
         self.haptic_width = 48
         self.haptic_height = 48
@@ -198,9 +198,8 @@ class Graphics:
                 pygame.draw.circle(self.screenHaptics, (200, 200, 200),p, 2)
         
         ### Hand visualisation
-        self.screenHaptics.blit(self.hhandle,self.effort_cursor)
-        
-        #pygame.draw.line(self.screenHaptics, (0, 0, 0), (self.haptic.center),(self.haptic.center+2*k*(xm-xh)))
+        hand_pos = (self.effort_cursor[0], self.effort_cursor[1] + 10)
+        self.screenHaptics.blit(self.hhandle, hand_pos)
         
         # Submarine 
         if self.submarine_pos[0] < pS[0]:

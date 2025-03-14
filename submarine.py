@@ -51,7 +51,7 @@ class Submarine:
             data = np.array(np.frombuffer(recv_data, dtype=np.float64))
             xm = data[:2]
             # Scale end effector position
-            xm[0] = np.clip((xm[0] + ((g.submarine_pos[0] + 150) - (g.window_size[0]/2))), -100, g.window_size[0] + 100)
+            xm[0] = np.clip((xm[0] + ((g.submarine_pos[0] + 177) - (g.window_size[0]/2))), -100, g.window_size[0] + 100)
             xm[1] = np.clip(((xm[1] + 20) * 1.2), 0, g.window_size[1] + 75)
             # Make sure they are pixels and the type is np array 
             xm = np.array(xm, dtype=int)
