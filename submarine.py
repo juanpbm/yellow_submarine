@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 import sys
-import math
-import time
 import numpy as np
 import pygame
 import socket
-
-
 
 from Physics import Physics
 from Graphics_submarine import Graphics
@@ -41,14 +37,12 @@ class Submarine:
         g = self.graphics
         #get input events for both keyboard and mouse
         keyups = g.get_events()
-        #  - keyups: list of unicode numbers for keys on the keyboard that were released this cycle
-        #  - pm: coordinates of the mouse on the graphics screen this cycle (x,y)      
-        #get the state of the device, or otherwise simulate it if no device is connected (using the mouse position)
         xh = g.haptic.center
         xs = np.array(g.submarine_pos)
         xh = np.array(xh, dtype=np.float64) #make sure fe is a numpy array
         g.erase_screen()
         
+        # TODO: maybe keys not needed here 
         for key in keyups:
             if key==ord("q"): #q for quit, ord() gets the unicode of the given character
                 sys.exit(0) #raises a system exit exception so the "PA.close()" function will still execute
@@ -63,15 +57,13 @@ class Submarine:
             # Receive position
             recv_data, _ = self.recv_sock.recvfrom(1024)
             data = np.array(np.frombuffer(recv_data, dtype=np.float64))
-            print(data)
             xm = data[:2]
-            xs = data[2:]
-            print(xm,xs)
-            # TODO: Scale received values
+            # Scale end effector position
             xm[0] = np.clip((xm[0] + ((g.submarine_pos[0] + 150) - (g.window_size[0]/2))), -100, g.window_size[0] + 100)
             xm[1] = np.clip(((xm[1] + 20) * 1.2), 0, g.window_size[1] + 75)
             # Make sure they are pixels and the type is np array 
             xm = np.array(xm, dtype=int)
+            xs = np.array(data[2:], dtype=int)
         except socket.timeout:
             pygame.quit() # stop pygame
             raise RuntimeError("Connection lost")

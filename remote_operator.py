@@ -1,18 +1,14 @@
 # -*- coding: utf-8 -*-
 import sys
-import math
-import time
 import numpy as np
 import pygame
 import socket
-import subprocess
 
 from Physics import Physics
 from Graphics_operator import Graphics
 
 class PA:
     def __init__(self):
-        # subprocess.Popen(["python", "submarine.py", "&&"])
         self.physics = Physics(hardware_version=3) #setup physics class. Returns a boolean indicating if a device is connected
         self.device_connected = self.physics.is_device_connected() #returns True if a connected haply device was found
         self.graphics = Graphics(self.device_connected) #setup class for drawing and graphics.
@@ -23,9 +19,10 @@ class PA:
         self.recv_sock.bind(("127.0.0.1", 40001))
         self.recv_sock.setblocking(False)
 
-        self.xs = np.array([320, 10], dtype=np.float64) # initial submarine pos 
+        # Submarine initial position
+        self.xs = np.array([320, 10], dtype=np.float64) 
 
-        
+        # Wait for user to press the space bar
         self.graphics.show_loading_screen()
         run = True
         while run:
@@ -86,8 +83,8 @@ class PA:
         if keypressed[pygame.K_RIGHT]:
             self.xs[0] = np.clip(self.xs[0] + 1, 0, 800 - 150)
 
+        # Send Position from the haptic device or mouse and the submarine position
         message = np.array([xh, self.xs])
-        # Send Position from the haptic device or mouse 
         self.send_sock.sendto(message.tobytes(), ("127.0.0.1", 40002))
 
         # Receive Force feedback

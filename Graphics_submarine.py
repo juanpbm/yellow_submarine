@@ -1,16 +1,8 @@
 # -*- coding: utf-8 -*-
-
 import pygame
 import numpy as np
-#import math
-#import matplotlib.pyplot as plt
-#from HaplyHAPI import Board, Device, Mechanisms, Pantograph
-#import sys, serial, glob
-#from serial.tools import list_ports
-import time
 import sys 
 import os
-import itertools
 
 class Graphics:
     def __init__(self,device_connected,window_size=(800,600)):
@@ -77,7 +69,6 @@ class Graphics:
         self.device_origin = (int(self.window_size[0]/2.0), 110)
         
         self.show_linkages = True
-        self.show_debug = True
 
     def convert_pos(self,*positions):
         #invert x because of screen axes
@@ -170,8 +161,19 @@ class Graphics:
         return pE
 
     def erase_screen(self):
+        # plot hight map
         self.screenHaptics.fill(self.cWhite) #erase the haptics surface
-        self.debug_text = ""
+        pixels = np.zeros((self.window_size[1], self.window_size[0], 3), dtype=np.uint8)  # Create empty image
+        Y_color = np.linspace(255, 0, self.window_size[1])[:, None]  # Gradient from 255 (top) to 0 (bottom)
+
+        # Apply the gradient to the blue channel
+        pixels[:, :, 0] = 0  
+        pixels[:, :, 1] = 0
+        pixels[:, :, 2] = Y_color
+
+        # Convert array to surface
+        surface = pygame.surfarray.make_surface(pixels.swapaxes(0, 1))
+        self.screenHaptics.blit(surface, (0, 0))
     
     def render(self,pA0,pB0,pA,pB,pE,f,pM, pS):
         ###################Render the Haptic Surface###################
@@ -215,14 +217,6 @@ class Graphics:
             pygame.draw.lines(self.screenHaptics, (0,0,0), False,[self.effort_cursor.center,pM],2)
         ##Fuse it back together
         self.window.blit(self.screenHaptics, (0,0))
-
-        ##Print status in  overlay
-        if self.show_debug:    
-            self.debug_text += "FPS = " + str(round(self.clock.get_fps()))+" "
-            self.debug_text += "fe: ["+str(np.round(f[0],1))+","+str(np.round(f[1],1))+"] "
-            self.debug_text += "xh: ["+str(np.round(pE[0],1))+","+str(np.round(pE[1],1))+"]"
-            self.text = self.font.render(self.debug_text, True, (0, 0, 0), (255, 255, 255))
-            self.window.blit(self.text, self.textRect)
 
         pygame.display.flip()    
         ##Slow down the loop to match FPS
