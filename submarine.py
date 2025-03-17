@@ -7,6 +7,8 @@ import socket
 from Physics import Physics
 from Graphics_submarine import Graphics
 
+        
+
 class Submarine:
     def __init__(self):
         self.physics = Physics(hardware_version=0, connect_device=False) #setup physics class. Returns a boolean indicating if a device is connected
@@ -15,10 +17,6 @@ class Submarine:
         self.recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock.bind(("127.0.0.1", 40002))
         self.recv_sock.setblocking(False)
-        
-
-
-
         # Wait for at least one message from the master. Only continue once something is received.
         print("Waiting for operator communication")
         i = 0
@@ -49,7 +47,6 @@ class Submarine:
         xs = np.array(g.submarine_pos)
         xh = np.array(g.haptic.center, dtype=np.float64) #make sure fe is a numpy array
         g.erase_screen()
-
         
         try:
             # Receive position
@@ -80,13 +77,6 @@ class Submarine:
         self.send_sock.sendto(fe.tobytes(), ("127.0.0.1", 40001))
 
         xh = g.sim_forces(xh,fe,xm,mouse_k=0.5,mouse_b=0.8) #simulate forces with mouse haptics
-
-        
-        if(xh[1] >=550):
-            xh[1] = 550
-        
-        
-            
         pos_phys = g.inv_convert_pos(xh)
         pA0,pB0,pA,pB,pE = p.derive_device_pos(pos_phys) #derive the pantograph joint positions given some endpoint position
         pB0 = pA0
@@ -95,6 +85,15 @@ class Submarine:
         pE = (pE[0] / 2, pE[1])
         pA0,pB0,pA,pB,xh = g.convert_pos(pA0,pB0,pA,pB,pE) #convert the physical positions to screen coordinates
         g.render(pA0,pB0,pA,pB,xh,fe,xm,xs)
+        
+        if(self.fish_pos[0] >= 550 and self.fish_dir == self.fish_right):
+            self.fish_mode = -1
+            self.fish_dir = self.fish_left
+        if(self.fish_pos[0] <=200 and self.fish_dir == self.fish_left):
+            self.fish_mode = 1
+            self.fish_dir = self.fish_right
+            
+        self.fish_pos[0] += self.fish_mode
         
     def close(self):
         self.graphics.close()
