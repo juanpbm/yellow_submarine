@@ -40,6 +40,7 @@ class Submarine:
 
         # Init Metrics variables
         self.passed = False
+        self.first = False
         self.damage = 0 # percentage
         self.path_length = 0 # pixels
         self.init_time = time.time() # seconds
@@ -52,6 +53,7 @@ class Submarine:
         g.get_events()
         xs = np.array(g.submarine_pos)
         xh = np.array(g.haptic.center, dtype=np.float64) #make sure fe is a numpy array
+        xh_prev = np.array(g.haptic.center, dtype=np.float64) #make sure fe is a numpy array
         g.erase_screen()
         
         try:
@@ -82,6 +84,13 @@ class Submarine:
         pB = (pB[0] / 4, pB[1] / 4)
         pE = (pE[0] / 2, pE[1])
         pA0,pB0,pA,pB,xh = g.convert_pos(pA0,pB0,pA,pB,pE) #convert the physical positions to screen coordinates
+        
+        if not self.first:
+            self.first = True
+        else:
+            print(xh_prev, xh, np.linalg.norm(xh_prev - np.ceil(xh)))
+            self.path_length += np.linalg.norm(xh_prev - np.ceil(xh))
+            print(self.path_length)
         g.render(pA0,pB0,pA,pB,xh,fe,xm,xs)
 
         # Check if game is over
@@ -94,7 +103,10 @@ class Submarine:
         # Metrics 
         final_time = time.time() - self.init_time
         play_again = self.graphics.show_exit_screen(self.passed, final_time, self.path_length, self.damage)
-        print(f"Passed: {self.passed}, Time: {final_time:.3f}, Path_length: {self.path_length}")
+        print(f"Passed: {self.passed}, Time: {final_time:.2f}, Path_length: {self.path_length:.2f}")
+        
+        with open("results.txt", "a") as file:
+            file.write(f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} Passed: {self.passed}, Time: {final_time:.2f}, Path_length: {self.path_length:.2f}\n")
 
         # Close used resources
         self.graphics.close()
@@ -114,3 +126,4 @@ if __name__=="__main__":
                 submarine.run()
         except:
             play_again = submarine.close()
+            submarine = None

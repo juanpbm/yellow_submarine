@@ -249,7 +249,7 @@ class Graphics:
         title_text_rect.center = (400, 100)
         self.window.blit(title_text, title_text_rect)
 
-        suma_text = f"Time: {final_time:.3f}s \n Path length {path_length} pixels \n Damage: {100-damage}%"
+        suma_text = f"Time: {final_time:.2f}s \n Path length {path_length:.2f} pixels \n Damage: {100 - damage}%"
         suma_font = pygame.font.Font('freesansbold.ttf', 40)
         suma_lines = suma_text.split("\n")
         offset = 200
