@@ -16,7 +16,8 @@ class Graphics:
         pygame.display.set_caption('Yellow Submarine')
 
         self.screenHaptics = pygame.Surface(self.window_size)
-
+        xc = self.screenHaptics.get_rect().centerx
+        yc =self.screenHaptics.get_rect().centery
         ##add nice icon from https://www.flaticon.com/authors/vectors-market
         self.icon = pygame.image.load('imgs/yellow_submarine_left.png')
         pygame.display.set_icon(self.icon)
@@ -68,8 +69,12 @@ class Graphics:
         self.submarine_pos = (int(self.window_size[0]/2.0 - 80), 10)
         self.device_origin = (int(self.window_size[0]/2.0), 110)
         
+        
+        # Object
+        self.object = pygame.Rect((350, 520, 55, 55))
+        
         self.show_linkages = True
-
+        
     def convert_pos(self,*positions):
         #invert x because of screen axes
         # 0---> +X
@@ -185,6 +190,8 @@ class Graphics:
 
         #pygame.draw.rect(self.screenHaptics, self.effort_color, self.haptic,border_radius=4)
         pygame.draw.rect(self.screenHaptics, self.effort_color, self.effort_cursor,border_radius=8)
+        
+        pygame.draw.rect(self.screenHaptics, "red", self.object)
 
         ######### Robot visualization ###################
         if self.show_linkages:
@@ -232,6 +239,9 @@ class Graphics:
             init_text_rect.topleft = (50, 300)
             self.window.blit(init_text, init_text_rect)
             pygame.display.flip()  
+            
+            
+        return 0
 
 
     def close(self):

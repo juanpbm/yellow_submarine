@@ -15,6 +15,9 @@ class Submarine:
         self.recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock.bind(("127.0.0.1", 40002))
         self.recv_sock.setblocking(False)
+        
+
+
 
         # Wait for at least one message from the master. Only continue once something is received.
         print("Waiting for operator communication")
@@ -35,27 +38,33 @@ class Submarine:
                 self.graphics.show_loading_screen(i)
                 i += 1
                 pass
-    
+            
+        self.mass=0.5
     def run(self):
         p = self.physics #assign these to shorthand variables for easier use in this function
         g = self.graphics
+        cursor=g.effort_cursor
         #get input events for both keyboard and mouse
         g.get_events()
         xs = np.array(g.submarine_pos)
         xh = np.array(g.haptic.center, dtype=np.float64) #make sure fe is a numpy array
         g.erase_screen()
+
         
         try:
             # Receive position
             recv_data, _ = self.recv_sock.recvfrom(1024)
             data = np.array(np.frombuffer(recv_data, dtype=np.float64))
             xm = data[:2]
+            
             # Scale end effector position
             xm[0] = np.clip((xm[0] + ((g.submarine_pos[0] + 177) - (g.window_size[0]/2))), -100, g.window_size[0] + 100)
             xm[1] = np.clip((xm[1] * 1.3), 0, g.window_size[1] + 75)
             # Make sure they are pixels and the type is np array 
             xm = np.array(xm, dtype=int)
-            xs = np.array(data[2:], dtype=int)
+            xs = np.array(data[2:4], dtype=int)
+            
+            grab_object=data[4]
         except socket.timeout:
             pygame.quit() # stop pygame
             raise RuntimeError("Connection lost")
@@ -63,9 +72,21 @@ class Submarine:
         # TODO: Calculate forces for feedback
         # Send force
         fe = np.array([0,0], dtype=np.float32)
+        fe+=np.array([0,-9.8*(self.mass-0.1)])
+        if (cursor.colliderect(g.object)) and (grab_object):
+            g.object.topleft=(cursor.bottomleft[0]-6,cursor.bottomleft[1]-6)
+            fe+=np.array([0,-9.8*(self.mass+0.2)])
+        print(fe)
         self.send_sock.sendto(fe.tobytes(), ("127.0.0.1", 40001))
 
         xh = g.sim_forces(xh,fe,xm,mouse_k=0.5,mouse_b=0.8) #simulate forces with mouse haptics
+
+        
+        if(xh[1] >=550):
+            xh[1] = 550
+        
+        
+            
         pos_phys = g.inv_convert_pos(xh)
         pA0,pB0,pA,pB,pE = p.derive_device_pos(pos_phys) #derive the pantograph joint positions given some endpoint position
         pB0 = pA0

@@ -24,6 +24,8 @@ class RemoteOperator:
 
         # Wait for user to press the space bar
         self.graphics.show_loading_screen()
+        
+        self.grab_object= 0
         run = True
         while run:
             keyups, _, _= self.graphics.get_events()
@@ -78,13 +80,18 @@ class RemoteOperator:
                 g.show_linkages = not g.show_linkages
             if key == ord('d'): #Change the visibility of the debug text
                 g.show_debug = not g.show_debug
+            if key == 32: # Space bar pressed
+                if (self.grab_object== 0):
+                    self.grab_object= 1
+                else:
+                    self.grab_object= 0
         if keypressed[pygame.K_LEFT]:
             self.xs[0] = np.clip(self.xs[0] - 1, 0, 800 - 150)
         if keypressed[pygame.K_RIGHT]:
             self.xs[0] = np.clip(self.xs[0] + 1, 0, 800 - 150)
 
         # Send Position from the haptic device or mouse and the submarine position
-        message = np.array([xh, self.xs])
+        message = np.array([xh, self.xs,(self.grab_object,0)])
         self.send_sock.sendto(message.tobytes(), ("127.0.0.1", 40002))
 
         # Receive Force feedback
