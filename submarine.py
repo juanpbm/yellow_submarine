@@ -3,6 +3,7 @@ import sys
 import numpy as np
 import pygame
 import socket
+import time
 
 from Physics import Physics
 from Graphics_submarine import Graphics
@@ -11,6 +12,7 @@ class Submarine:
     def __init__(self):
         self.physics = Physics(hardware_version=0, connect_device=False) #setup physics class. Returns a boolean indicating if a device is connected
         self.graphics = Graphics(False) #setup class for drawing and graphics.
+        # Set up UDP sockets
         self.send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock.bind(("127.0.0.1", 40002))
@@ -35,6 +37,13 @@ class Submarine:
                 self.graphics.show_loading_screen(i)
                 i += 1
                 pass
+
+        # Init Metrics variables
+        self.passed = False
+        self.damage = 0 # percentage
+        self.path_length = 0 # pixels
+        self.init_time = time.time() # seconds
+        self.max_time = 0.1 * 60 # "T_minutes" * 60s = T_seconds 
     
     def run(self):
         p = self.physics #assign these to shorthand variables for easier use in this function
@@ -74,17 +83,34 @@ class Submarine:
         pE = (pE[0] / 2, pE[1])
         pA0,pB0,pA,pB,xh = g.convert_pos(pA0,pB0,pA,pB,pE) #convert the physical positions to screen coordinates
         g.render(pA0,pB0,pA,pB,xh,fe,xm,xs)
+
+        # Check if game is over
+        print(time.time() - self.init_time)
+        if (time.time() - self.init_time >= self.max_time):
+            self.passed = False
+            raise RuntimeError("Game Finished")
         
     def close(self):
+        # Metrics 
+        final_time = time.time() - self.init_time
+        play_again = self.graphics.show_exit_screen(self.passed, final_time, self.path_length, self.damage)
+        print(f"Passed: {self.passed}, Time: {final_time:.3f}, Path_length: {self.path_length}")
+
+        # Close used resources
         self.graphics.close()
         self.physics.close()
         self.send_sock.close()
         self.recv_sock.close()
+        return play_again
+
+
 
 if __name__=="__main__":
-    submarine = Submarine()
-    try:
-        while True:
-            submarine.run()
-    finally:
-        submarine.close()
+    play_again = True
+    while play_again:
+        submarine = Submarine()
+        try:
+            while True:
+                submarine.run()
+        except:
+            play_again = submarine.close()
