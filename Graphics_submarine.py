@@ -5,9 +5,8 @@ import sys
 import os
 
 class Graphics:
-    def __init__(self,device_connected,window_size=(800,600)):
+    def __init__(self,device_connected,num_fish=0,window_size=(800,600)):
         self.device_connected = device_connected
-        
         #initialize pygame window
         self.window_size = window_size #default (600,400)
         os.environ['SDL_VIDEO_WINDOW_POS'] = "20,100"
@@ -54,7 +53,7 @@ class Graphics:
         self.colorHaptic = self.cOrange ##color of the wall
 
         # Make submarine
-        # image taken from https://www.cleanpng.com/png-yellow-submarine-clip-art-submarine-biomass-vector-1902493/
+        # im age taken from https://www.cleanpng.com/png-yellow-submarine-clip-art-submarine-biomass-vector-1902493/
         self.submarine_left = pygame.transform.scale(pygame.image.load('imgs/yellow_submarine_left.png'), (150, 100))
         self.submarine_right = pygame.transform.scale(pygame.image.load('imgs/yellow_submarine_right.png'), (150, 100))
         self.submarine_dir = self.submarine_left
@@ -69,6 +68,25 @@ class Graphics:
         self.device_origin = (int(self.window_size[0]/2.0), 110)
         
         self.show_linkages = True
+        
+        
+        # Fish
+        self.fish_left = pygame.transform.scale(pygame.image.load('imgs/fish_left.png'), (40, 20))
+        self.fish_right = pygame.transform.scale(pygame.image.load('imgs/fish_right.png'), (40, 20))
+
+        self.fish = [0,0,0]
+
+        self.fish_dir = np.array([self.fish_right, self.fish_left, self.fish_right])
+        self.fish_mode = np.array([1,-1, 1])
+        self.fish_pos = [[200,500],[400,550],[500,400]]
+        
+        if(num_fish >= 1):
+            self.fish[0] = 1
+        if(num_fish >= 2):
+            self.fish[1] = 1
+        if(num_fish >= 3):
+            self.fish[2] = 1
+
 
     def convert_pos(self,*positions):
         #invert x because of screen axes
@@ -177,6 +195,8 @@ class Graphics:
     def render(self,pA0,pB0,pA,pB,pE,f,pM, pS):
         ###################Render the Haptic Surface###################
         #set new position of items indicating the endpoint location
+        # fish
+        self.render_fish()
         self.haptic.center = pE #the hhandle image and effort square will also use this position for drawing
         self.effort_cursor.center = self.haptic.center
 
@@ -216,6 +236,7 @@ class Graphics:
         ##Fuse it back together
         self.window.blit(self.screenHaptics, (0,0))
 
+
         pygame.display.flip()    
         ##Slow down the loop to match FPS
         self.clock.tick(self.FPS)
@@ -233,8 +254,27 @@ class Graphics:
             self.window.blit(init_text, init_text_rect)
             pygame.display.flip()  
 
+    # FISH
+    def render_fish(self):
+        
+        for n, f in enumerate(self.fish):
+            if(f == 1):
+                self.screenHaptics.blit(self.fish_dir[n], self.fish_pos[n])
+                
+                
+                if self.fish_pos[n][0] >= 550 and self.fish_mode[n] == 1:
+                    self.fish_mode[n] = -1
+                    self.fish_dir[n] = self.fish_left
+                elif self.fish_pos[n][0] <= 200 and self.fish_mode[n] == -1:
+                    self.fish_mode[n] = 1
+                    self.fish_dir[n] = self.fish_right
+                    
+                self.fish_pos[n][0] += self.fish_mode[n]
+
 
     def close(self):
         pygame.display.quit()
         pygame.quit()
+
+    
 

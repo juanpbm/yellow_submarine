@@ -12,7 +12,7 @@ from Graphics_submarine import Graphics
 class Submarine:
     def __init__(self):
         self.physics = Physics(hardware_version=0, connect_device=False) #setup physics class. Returns a boolean indicating if a device is connected
-        self.graphics = Graphics(False) #setup class for drawing and graphics.
+        self.graphics = Graphics(False,3) #setup class for drawing and graphics.
         self.send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock.bind(("127.0.0.1", 40002))
@@ -21,7 +21,8 @@ class Submarine:
         self.fish_left = pygame.transform.scale(pygame.image.load('imgs/fish_left.png'), (40, 20))
         self.fish_right = pygame.transform.scale(pygame.image.load('imgs/fish_right.png'), (40, 20))
         self.fish_dir = self.fish_right
-        self.fish_pos = np.array([200,400])
+        #self.fish_pos = np.array([200,400])
+        self.fish_pos = np.array([400,400])
         
         self.fish_mode = 1
         
@@ -63,7 +64,7 @@ class Submarine:
         xs = np.array(g.submarine_pos)
         xh = np.array(g.haptic.center, dtype=np.float64) #make sure fe is a numpy array
         g.erase_screen()
-        g.screenHaptics.blit(self.fish_dir, self.fish_pos)
+        #g.screenHaptics.blit(self.fish_dir, self.fish_pos)
         pygame.draw.rect(g.screenHaptics,self.dBrown,self.wall)
         pygame.draw.rect(g.screenHaptics,self.dGray,self.platform)
         pygame.draw.rect(g.screenHaptics,self.bGray,self.table)
@@ -102,14 +103,7 @@ class Submarine:
         pA0,pB0,pA,pB,xh = g.convert_pos(pA0,pB0,pA,pB,pE) #convert the physical positions to screen coordinates
         g.render(pA0,pB0,pA,pB,xh,fe,xm,xs)
         
-        if(self.fish_pos[0] >= 550 and self.fish_dir == self.fish_right):
-            self.fish_mode = -1
-            self.fish_dir = self.fish_left
-        if(self.fish_pos[0] <=200 and self.fish_dir == self.fish_left):
-            self.fish_mode = 1
-            self.fish_dir = self.fish_right
-            
-        self.fish_pos[0] += self.fish_mode
+
         
     def close(self):
         self.graphics.close()
