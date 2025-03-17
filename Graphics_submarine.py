@@ -72,6 +72,22 @@ class Graphics:
         
         # Object
         self.object = pygame.Rect((350, 520, 55, 55))
+
+        #Obstacles
+        self.fish_mode = 1
+        self.fish_left = pygame.transform.scale(pygame.image.load('imgs/fish_left.png'), (40, 20))
+        self.fish_right = pygame.transform.scale(pygame.image.load('imgs/fish_right.png'), (40, 20))
+        self.fish_dir = self.fish_right
+        self.fish_pos = np.array([200,400])
+
+        self.wall = pygame.Rect(0, 300, 185, 600)
+        self.platform = pygame.Rect(600, 400, 800, 600)
+        self.table = pygame.Rect(630, 400, 800, 25)
+        self.ground = pygame.Rect(185, 575, 415, 50)
+        self.dGray = (50,50,50)
+        self.bGray = (230,230,230)
+        self.dBrown = (92, 64, 51)
+        self.Sand = (198, 166, 100)
         
         self.show_linkages = True
         
@@ -193,6 +209,12 @@ class Graphics:
         
         pygame.draw.rect(self.screenHaptics, "red", self.object)
 
+        self.screenHaptics.blit(self.fish_dir, self.fish_pos)
+        pygame.draw.rect(self.screenHaptics,self.dBrown,self.wall)
+        pygame.draw.rect(self.screenHaptics,self.dGray,self.platform)
+        pygame.draw.rect(self.screenHaptics,self.bGray,self.table)
+        pygame.draw.rect(self.screenHaptics,self.Sand,self.ground)
+
         ######### Robot visualization ###################
         if self.show_linkages:
             pygame.draw.lines(self.screenHaptics, self.cYellow, False,[pA0,pA],5)
@@ -217,6 +239,15 @@ class Graphics:
         self.submarine_pos = tuple(pS)
         self.device_origin = (pS[0] + 75, pS[1] + 90)
         self.screenHaptics.blit(self.submarine_dir, self.submarine_pos)
+
+        if(self.fish_pos[0] >= 550 and self.fish_dir == self.fish_right):
+            self.fish_mode = -1
+            self.fish_dir = self.fish_left
+        if(self.fish_pos[0] <=200 and self.fish_dir == self.fish_left):
+            self.fish_mode = 1
+            self.fish_dir = self.fish_right
+            
+        self.fish_pos[0] += self.fish_mode
 
         if not self.device_connected:
             pygame.draw.lines(self.screenHaptics, (0,0,0), False,[self.effort_cursor.center,pM],2)

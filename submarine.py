@@ -69,10 +69,10 @@ class Submarine:
         # TODO: Calculate forces for feedback
         # Send force
         fe = np.array([0,0], dtype=np.float32)
-        fe+=np.array([0,-9.8*(self.mass-0.1)])
+        fe+=np.array([0,-9.8*(self.mass)])
         if (cursor.colliderect(g.object)) and (grab_object):
             g.object.topleft=(cursor.bottomleft[0]-6,cursor.bottomleft[1]-6)
-            fe+=np.array([0,-9.8*(self.mass+0.2)])
+            fe+=np.array([0,-9.8*(self.mass)])
         print(fe)
         self.send_sock.sendto(fe.tobytes(), ("127.0.0.1", 40001))
 
@@ -86,14 +86,14 @@ class Submarine:
         pA0,pB0,pA,pB,xh = g.convert_pos(pA0,pB0,pA,pB,pE) #convert the physical positions to screen coordinates
         g.render(pA0,pB0,pA,pB,xh,fe,xm,xs)
         
-        if(self.fish_pos[0] >= 550 and self.fish_dir == self.fish_right):
-            self.fish_mode = -1
-            self.fish_dir = self.fish_left
-        if(self.fish_pos[0] <=200 and self.fish_dir == self.fish_left):
-            self.fish_mode = 1
-            self.fish_dir = self.fish_right
+        # if(self.fish_pos[0] >= 550 and self.fish_dir == self.fish_right):
+        #     self.fish_mode = -1
+        #     self.fish_dir = self.fish_left
+        # if(self.fish_pos[0] <=200 and self.fish_dir == self.fish_left):
+        #     self.fish_mode = 1
+        #     self.fish_dir = self.fish_right
             
-        self.fish_pos[0] += self.fish_mode
+        # self.fish_pos[0] += self.fish_mode
         
     def close(self):
         self.graphics.close()
