@@ -7,6 +7,8 @@ import socket
 from Physics import Physics
 from Graphics_submarine import Graphics
 
+        
+
 class Submarine:
     def __init__(self):
         self.physics = Physics(hardware_version=0, connect_device=False) #setup physics class. Returns a boolean indicating if a device is connected
@@ -15,6 +17,23 @@ class Submarine:
         self.recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock.bind(("127.0.0.1", 40002))
         self.recv_sock.setblocking(False)
+        
+        self.fish_left = pygame.transform.scale(pygame.image.load('imgs/fish_left.png'), (40, 20))
+        self.fish_right = pygame.transform.scale(pygame.image.load('imgs/fish_right.png'), (40, 20))
+        self.fish_dir = self.fish_right
+        self.fish_pos = np.array([200,400])
+        
+        self.fish_mode = 1
+        
+        self.wall = pygame.Rect(0, 300, 185, 600)
+        self.platform = pygame.Rect(600, 400, 800, 600)
+        self.table = pygame.Rect(630, 400, 800, 25)
+        self.ground = pygame.Rect(185, 575, 415, 50)
+        self.dGray = (50,50,50)
+        self.bGray = (230,230,230)
+        self.dBrown = (92, 64, 51)
+        self.Sand = (198, 166, 100)
+        #self.wall = pygame.Rect(xc, yc, 300, 300)
 
         # Wait for at least one message from the master. Only continue once something is received.
         print("Waiting for operator communication")
@@ -44,6 +63,11 @@ class Submarine:
         xs = np.array(g.submarine_pos)
         xh = np.array(g.haptic.center, dtype=np.float64) #make sure fe is a numpy array
         g.erase_screen()
+        g.screenHaptics.blit(self.fish_dir, self.fish_pos)
+        pygame.draw.rect(g.screenHaptics,self.dBrown,self.wall)
+        pygame.draw.rect(g.screenHaptics,self.dGray,self.platform)
+        pygame.draw.rect(g.screenHaptics,self.bGray,self.table)
+        pygame.draw.rect(g.screenHaptics,self.Sand,self.ground)
         
         try:
             # Receive position
@@ -66,6 +90,9 @@ class Submarine:
         self.send_sock.sendto(fe.tobytes(), ("127.0.0.1", 40001))
 
         xh = g.sim_forces(xh,fe,xm,mouse_k=0.5,mouse_b=0.8) #simulate forces with mouse haptics
+        
+        if(xh[1] >=550):
+            xh[1] = 550
         pos_phys = g.inv_convert_pos(xh)
         pA0,pB0,pA,pB,pE = p.derive_device_pos(pos_phys) #derive the pantograph joint positions given some endpoint position
         pB0 = pA0
@@ -74,6 +101,15 @@ class Submarine:
         pE = (pE[0] / 2, pE[1])
         pA0,pB0,pA,pB,xh = g.convert_pos(pA0,pB0,pA,pB,pE) #convert the physical positions to screen coordinates
         g.render(pA0,pB0,pA,pB,xh,fe,xm,xs)
+        
+        if(self.fish_pos[0] >= 550 and self.fish_dir == self.fish_right):
+            self.fish_mode = -1
+            self.fish_dir = self.fish_left
+        if(self.fish_pos[0] <=200 and self.fish_dir == self.fish_left):
+            self.fish_mode = 1
+            self.fish_dir = self.fish_right
+            
+        self.fish_pos[0] += self.fish_mode
         
     def close(self):
         self.graphics.close()
