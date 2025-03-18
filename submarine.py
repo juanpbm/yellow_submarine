@@ -17,24 +17,6 @@ class Submarine:
         self.recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock.bind(("127.0.0.1", 40002))
         self.recv_sock.setblocking(False)
-        
-        self.fish_left = pygame.transform.scale(pygame.image.load('imgs/fish_left.png'), (40, 20))
-        self.fish_right = pygame.transform.scale(pygame.image.load('imgs/fish_right.png'), (40, 20))
-        self.fish_dir = self.fish_right
-        self.fish_pos = np.array([200,400])
-        
-        self.fish_mode = 1
-        
-        self.wall = pygame.Rect(0, 300, 185, 600)
-        self.platform = pygame.Rect(600, 400, 800, 600)
-        self.table = pygame.Rect(630, 400, 800, 25)
-        self.ground = pygame.Rect(185, 575, 415, 50)
-        self.dGray = (50,50,50)
-        self.bGray = (230,230,230)
-        self.dBrown = (92, 64, 51)
-        self.Sand = (198, 166, 100)
-        #self.wall = pygame.Rect(xc, yc, 300, 300)
-
         # Wait for at least one message from the master. Only continue once something is received.
         print("Waiting for operator communication")
         i = 0
@@ -54,45 +36,85 @@ class Submarine:
                 self.graphics.show_loading_screen(i)
                 i += 1
                 pass
+            
+        self.mass=0.5
+        # Haptic dimensions (in pixels)
+        self.haptic_width = 48
+        self.haptic_height = 48
+        self.haptic_length = 48
+
+        # Constants for gravity, buoyancy, and damping
+        self.mass = 10  
+        self.water_density = 1025  
+        self.gravity = 9.81  
+        self.drag_coefficient = 1
+
     
+        self.cross_sectional_area = (self.haptic_width / self.graphics.window_scale) * (
+            self.haptic_height / self.graphics.window_scale
+        )  
+        self.b_water = 0.5 * self.water_density * self.drag_coefficient * self.cross_sectional_area
+
+
+        
+        self.displaced_volume = (
+            (self.haptic_width / self.graphics.window_scale)
+            * (self.haptic_height / self.graphics.window_scale)
+            * (self.haptic_length / self.graphics.window_scale)
+        ) 
+
     def run(self):
         p = self.physics #assign these to shorthand variables for easier use in this function
         g = self.graphics
+        cursor=g.effort_cursor
         #get input events for both keyboard and mouse
         g.get_events()
         xs = np.array(g.submarine_pos)
         xh = np.array(g.haptic.center, dtype=np.float64) #make sure fe is a numpy array
         g.erase_screen()
-        g.screenHaptics.blit(self.fish_dir, self.fish_pos)
-        pygame.draw.rect(g.screenHaptics,self.dBrown,self.wall)
-        pygame.draw.rect(g.screenHaptics,self.dGray,self.platform)
-        pygame.draw.rect(g.screenHaptics,self.bGray,self.table)
-        pygame.draw.rect(g.screenHaptics,self.Sand,self.ground)
         
         try:
             # Receive position
             recv_data, _ = self.recv_sock.recvfrom(1024)
             data = np.array(np.frombuffer(recv_data, dtype=np.float64))
             xm = data[:2]
+            
             # Scale end effector position
             xm[0] = np.clip((xm[0] + ((g.submarine_pos[0] + 177) - (g.window_size[0]/2))), -100, g.window_size[0] + 100)
             xm[1] = np.clip((xm[1] * 1.3), 0, g.window_size[1] + 75)
             # Make sure they are pixels and the type is np array 
             xm = np.array(xm, dtype=int)
-            xs = np.array(data[2:], dtype=int)
+            xs = np.array(data[2:4], dtype=int)
+            
+            grab_object=data[4]
         except socket.timeout:
             pygame.quit() # stop pygame
             raise RuntimeError("Connection lost")
 
         # TODO: Calculate forces for feedback
         # Send force
+        dt = 0.01  # Time step (s)
+
+    
+        if not hasattr(self, "prev_xh"):
+            self.prev_xh = xh.copy()
+
+    
+        v_h = ((xh - self.prev_xh) / g.window_scale) / dt
+        self.b_water = 0.5 
+        f_hydro = np.array(-self.b_water * v_h)
+        
+
+        f_perturbation = -(self.mass* self.gravity+ self.water_density*self.gravity*xh[1]/400*self.cross_sectional_area - self.water_density * self.displaced_volume* self.gravity) 
+        f_perturbation = np.array([0, f_perturbation])+f_hydro 
         fe = np.array([0,0], dtype=np.float32)
+        fe+=f_perturbation
+        if (cursor.colliderect(g.object)) and (grab_object):
+            g.object.topleft=(cursor.bottomleft[0]-6,cursor.bottomleft[1]-6)
+            fe+=np.array([0,-9.8*(self.mass)])
         self.send_sock.sendto(fe.tobytes(), ("127.0.0.1", 40001))
 
         xh = g.sim_forces(xh,fe,xm,mouse_k=0.5,mouse_b=0.8) #simulate forces with mouse haptics
-        
-        if(xh[1] >=550):
-            xh[1] = 550
         pos_phys = g.inv_convert_pos(xh)
         pA0,pB0,pA,pB,pE = p.derive_device_pos(pos_phys) #derive the pantograph joint positions given some endpoint position
         pB0 = pA0
@@ -102,14 +124,14 @@ class Submarine:
         pA0,pB0,pA,pB,xh = g.convert_pos(pA0,pB0,pA,pB,pE) #convert the physical positions to screen coordinates
         g.render(pA0,pB0,pA,pB,xh,fe,xm,xs)
         
-        if(self.fish_pos[0] >= 550 and self.fish_dir == self.fish_right):
-            self.fish_mode = -1
-            self.fish_dir = self.fish_left
-        if(self.fish_pos[0] <=200 and self.fish_dir == self.fish_left):
-            self.fish_mode = 1
-            self.fish_dir = self.fish_right
+        # if(self.fish_pos[0] >= 550 and self.fish_dir == self.fish_right):
+        #     self.fish_mode = -1
+        #     self.fish_dir = self.fish_left
+        # if(self.fish_pos[0] <=200 and self.fish_dir == self.fish_left):
+        #     self.fish_mode = 1
+        #     self.fish_dir = self.fish_right
             
-        self.fish_pos[0] += self.fish_mode
+        # self.fish_pos[0] += self.fish_mode
         
     def close(self):
         self.graphics.close()

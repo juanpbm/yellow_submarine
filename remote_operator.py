@@ -24,6 +24,8 @@ class RemoteOperator:
 
         # Wait for user to press the space bar
         self.graphics.show_loading_screen()
+        
+        self.grab_object= 0
         run = True
         while run:
             keyups, _, _= self.graphics.get_events()
@@ -78,13 +80,18 @@ class RemoteOperator:
                 g.show_linkages = not g.show_linkages
             if key == ord('d'): #Change the visibility of the debug text
                 g.show_debug = not g.show_debug
+            if key == 32: # Space bar pressed
+                if (self.grab_object== 0):
+                    self.grab_object= 1
+                else:
+                    self.grab_object= 0
         if keypressed[pygame.K_LEFT]:
             self.xs[0] = np.clip(self.xs[0] - 1, 0, 800 - 150)
         if keypressed[pygame.K_RIGHT]:
             self.xs[0] = np.clip(self.xs[0] + 1, 0, 800 - 150)
 
         # Send Position from the haptic device or mouse and the submarine position
-        message = np.array([xh, self.xs])
+        message = np.array([xh, self.xs,(self.grab_object,0)])
         self.send_sock.sendto(message.tobytes(), ("127.0.0.1", 40002))
 
         # Receive Force feedback
@@ -97,12 +104,29 @@ class RemoteOperator:
             # TODO: why is it not triggering this 
             pygame.quit()
             raise RuntimeError("Connection lost")
+        # Spring and damping constants
+        k_spring = -500 
+        b_damping = 0.1  
+        dt = 0.01 
 
+    
+        if not hasattr(self, "prev_xh"):
+            self.prev_xh = xh.copy()
+
+        
+        f_vspring = k_spring * (xh - 300) / g.window_scale
+        v_h = ((xh - self.prev_xh) / g.window_scale) / dt
+        f_damping = b_damping * v_h
+        force = f_vspring + f_damping+fe
+        print(force)
+        
+        # Update previous position
+        self.prev_xh = xh.copy()
         ##############################################
         if self.device_connected: #set forces only if the device is connected
-            p.update_force(fe)
+            p.update_force(force)
         else:
-            xh = g.sim_forces(xh,fe,xm,mouse_k=0.5,mouse_b=0.8) #simulate forces with mouse haptics
+            xh = g.sim_forces(xh,force,xm,mouse_k=0.5,mouse_b=0.8) #simulate forces with mouse haptics
             pos_phys = g.inv_convert_pos(xh)
             pA0,pB0,pA,pB,pE = p.derive_device_pos(pos_phys) #derive the pantograph joint positions given some endpoint position
             pA0,pB0,pA,pB,xh = g.convert_pos(pA0,pB0,pA,pB,pE) #convert the physical positions to screen coordinates
