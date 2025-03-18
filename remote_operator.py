@@ -86,7 +86,6 @@ class RemoteOperator:
         # Send Position from the haptic device or mouse and the submarine position
         message = np.array([xh, self.xs])
         self.send_sock.sendto(message.tobytes(), ("127.0.0.1", 40002))
-
         # Receive Force feedback
         try:
             recv_data, _ = self.recv_sock.recvfrom(1024)
@@ -98,6 +97,9 @@ class RemoteOperator:
             pygame.quit()
             raise RuntimeError("Connection lost")
 
+        
+        # Update previous position
+        self.prev_xh = xh.copy()
         ##############################################
         if self.device_connected: #set forces only if the device is connected
             p.update_force(fe)
