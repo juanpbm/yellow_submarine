@@ -257,7 +257,7 @@ class Graphics:
             self.window.blit(line, line_rect)
             offset += 40
 
-        continue_text = f"Press y to play again, or any other key to quit"
+        continue_text = f"Press SPACE BAR to play again, or any other key to quit"
         continue_font = pygame.font.Font('freesansbold.ttf', 20)
         continue_text = continue_font.render(continue_text, True, self.cWhite, (0, 0, 0))
         continue_text_rect = continue_text.get_rect()
@@ -271,8 +271,8 @@ class Graphics:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: #close window button was pressed
                     sys.exit(0) #raises a system exit exception so any Finally will actually execute
-                elif event.type == pygame.KEYDOWN:
-                    if  event.key == ord('y'):
+                elif event.type == pygame.KEYUP:
+                    if  event.key == pygame.K_SPACE:
                         display = False
                         play_again = True
                     else:
