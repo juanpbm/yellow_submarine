@@ -18,14 +18,13 @@ class RemoteOperator:
         self.recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock.bind(("127.0.0.1", 40001))
         self.recv_sock.setblocking(False)
+        self.grab_object= 0
 
         # Submarine initial position
         self.xs = np.array([320, 10], dtype=np.float64) 
 
         # Wait for user to press the space bar
         self.graphics.show_loading_screen()
-        
-        self.grab_object= 0
         run = True
         while run:
             keyups, _, _= self.graphics.get_events()
@@ -91,9 +90,9 @@ class RemoteOperator:
             self.xs[0] = np.clip(self.xs[0] + 1, 0, 800 - 150)
 
         # Send Position from the haptic device or mouse and the submarine position
+        # Send Position from the haptic device or mouse and the submarine position
         message = np.array([xh, self.xs,(self.grab_object,0)])
         self.send_sock.sendto(message.tobytes(), ("127.0.0.1", 40002))
-        # Receive Force feedback
         try:
             recv_data, _ = self.recv_sock.recvfrom(1024)
             fe = np.frombuffer(recv_data, dtype=np.float32)
@@ -103,11 +102,8 @@ class RemoteOperator:
             # TODO: why is it not triggering this 
             pygame.quit()
             raise RuntimeError("Connection lost")
-        # Spring and damping constants
-        k_spring = -500 
-        b_damping = 0.1  
-        dt = 0.01 
 
+        
         # Update previous position
         self.prev_xh = xh.copy()
         ##############################################
