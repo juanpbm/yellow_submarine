@@ -233,57 +233,6 @@ class Graphics:
             self.window.blit(init_text, init_text_rect)
             pygame.display.flip()  
 
-    def show_exit_screen(self, passed, final_time, path_length, damage):
-        # Show Exit message
-        self.window.fill(self.cBlack)
-
-        if (passed):
-            title_text = "Congratulations!!!"
-            title_color = self.cGreen
-        else:
-            title_text = "Game Over!!!"
-            title_color = self.cRed
-        title_font = pygame.font.Font('freesansbold.ttf', 60)
-        title_text = title_font.render(title_text, True, title_color, (0, 0, 0))
-        title_text_rect = title_text.get_rect()
-        title_text_rect.center = (400, 100)
-        self.window.blit(title_text, title_text_rect)
-
-        suma_text = f"Time: {final_time:.2f}s \n Path length {path_length:.2f} pixels \n Damage: {100 - damage}%"
-        suma_font = pygame.font.Font('freesansbold.ttf', 40)
-        suma_lines = suma_text.split("\n")
-        offset = 200
-        for line in suma_lines:
-            line = suma_font.render(line, True, self.cWhite, (0, 0, 0))
-            line_rect = line.get_rect()
-            line_rect.center = (400, offset)
-            self.window.blit(line, line_rect)
-            offset += 40
-
-        continue_text = f"Press Space to play again, or any other key to quit"
-        continue_font = pygame.font.Font('freesansbold.ttf', 25)
-        continue_text = continue_font.render(continue_text, True, self.cWhite, (0, 0, 0))
-        continue_text_rect = continue_text.get_rect()
-        continue_text_rect.center = (400, 500)
-        self.window.blit(continue_text, continue_text_rect)
-
-        pygame.display.flip() 
-        display = True
-        play_again = False
-        while display:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT: #close window button was pressed
-                    sys.exit(0) #raises a system exit exception so any Finally will actually execute
-                elif event.type == pygame.KEYDOWN:
-                    if  event.key == pygame.K_SPACE:
-                        display = False
-                        play_again = True
-                    else:
-                        display = False
-                        play_again = False
-
-        return play_again
-
 
     def close(self):
         pygame.display.quit()
