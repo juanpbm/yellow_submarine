@@ -39,13 +39,12 @@ class Submarine:
                 self.graphics.show_loading_screen(i)
                 i += 1
                 pass
-<<<<<<< HEAD
+
                 self.mass=0.5
-=======
+
             
         self.mass=0.5
-        # Haptic dimensions (in pixels)
->>>>>>> fb686e524fe2c269c8c692471d53c32a996c9395
+
         self.haptic_width = 48
         self.haptic_height = 48
         self.haptic_length = 48
@@ -56,7 +55,6 @@ class Submarine:
         self.gravity = 9.81  
         self.drag_coefficient = 1
 
-<<<<<<< HEAD
     
         self.cross_sectional_area = (self.haptic_width / self.graphics.window_scale) * (
             self.haptic_height / self.graphics.window_scale
@@ -124,21 +122,8 @@ class Submarine:
         self.perturbations = new_perturbations  
 
         return perturbation_force
-=======
->>>>>>> fb686e524fe2c269c8c692471d53c32a996c9395
-    
-        self.cross_sectional_area = (self.haptic_width / self.graphics.window_scale) * (
-            self.haptic_height / self.graphics.window_scale
-        )  
-        self.b_water = 0.5 * self.water_density * self.drag_coefficient * self.cross_sectional_area
 
 
-        
-        self.displaced_volume = (
-            (self.haptic_width / self.graphics.window_scale)
-            * (self.haptic_height / self.graphics.window_scale)
-            * (self.haptic_length / self.graphics.window_scale)
-        ) 
 
     def run(self):
         p = self.physics #assign these to shorthand variables for easier use in this function
@@ -168,18 +153,12 @@ class Submarine:
             pygame.quit() # stop pygame
             raise RuntimeError("Connection lost")
 
-<<<<<<< HEAD
-=======
-        # TODO: Calculate forces for feedback
-        # Send force
->>>>>>> fb686e524fe2c269c8c692471d53c32a996c9395
         dt = 0.01  # Time step (s)
 
     
         if not hasattr(self, "prev_xh"):
             self.prev_xh = xh.copy()
 
-<<<<<<< HEAD
 
          # k_wall = 1000  
         # f_wall = -k_wall * (self.proxy - xh)/g.window_scale
@@ -189,14 +168,12 @@ class Submarine:
 
         # k_ground = 1000  
         # f_ground = -k_ground * (self.proxy - xh)/g.window_scale
-=======
->>>>>>> fb686e524fe2c269c8c692471d53c32a996c9395
+
     
         v_h = ((xh - self.prev_xh) / g.window_scale) / dt
         self.b_water = 0.5 
         f_hydro = np.array(-self.b_water * v_h)
         
-<<<<<<< HEAD
         #+ self.water_density*self.gravity*xh[1]/400*self.cross_sectional_area
         if random.random() < 0.1:  
             self.perturbations.append(self.generate_perturbation())
@@ -227,7 +204,6 @@ class Submarine:
         
         if(xh[1] >=550):
             xh[1] = 550
-=======
 
         f_perturbation = -(self.mass* self.gravity+ self.water_density*self.gravity*xh[1]/400*self.cross_sectional_area - self.water_density * self.displaced_volume* self.gravity) 
         f_perturbation = np.array([0, f_perturbation])+f_hydro 
@@ -239,7 +215,6 @@ class Submarine:
         self.send_sock.sendto(fe.tobytes(), ("127.0.0.1", 40001))
 
         xh = g.sim_forces(xh,fe,xm,mouse_k=0.5,mouse_b=0.8) #simulate forces with mouse haptics
->>>>>>> fb686e524fe2c269c8c692471d53c32a996c9395
         pos_phys = g.inv_convert_pos(xh)
         pA0,pB0,pA,pB,pE = p.derive_device_pos(pos_phys) #derive the pantograph joint positions given some endpoint position
         pB0 = pA0

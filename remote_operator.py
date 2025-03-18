@@ -108,27 +108,13 @@ class RemoteOperator:
         b_damping = 0.1  
         dt = 0.01 
 
-<<<<<<< HEAD
-=======
-    
-        if not hasattr(self, "prev_xh"):
-            self.prev_xh = xh.copy()
-
-        
-        f_vspring = k_spring * (xh - 300) / g.window_scale
-        v_h = ((xh - self.prev_xh) / g.window_scale) / dt
-        f_damping = b_damping * v_h
-        force = f_vspring + f_damping+fe
-        print(force)
->>>>>>> fb686e524fe2c269c8c692471d53c32a996c9395
-        
         # Update previous position
         self.prev_xh = xh.copy()
         ##############################################
         if self.device_connected: #set forces only if the device is connected
-            p.update_force(force)
+            p.update_force(fe)
         else:
-            xh = g.sim_forces(xh,force,xm,mouse_k=0.5,mouse_b=0.8) #simulate forces with mouse haptics
+            xh = g.sim_forces(xh,fe,xm,mouse_k=0.5,mouse_b=0.8) #simulate forces with mouse haptics
             pos_phys = g.inv_convert_pos(xh)
             pA0,pB0,pA,pB,pE = p.derive_device_pos(pos_phys) #derive the pantograph joint positions given some endpoint position
             pA0,pB0,pA,pB,xh = g.convert_pos(pA0,pB0,pA,pB,pE) #convert the physical positions to screen coordinates
