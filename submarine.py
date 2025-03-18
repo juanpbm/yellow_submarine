@@ -121,7 +121,7 @@ class Submarine:
         print(f"Passed: {self.passed}, Time: {final_time:.2f}, Path_length: {self.path_length:.2f}")
         # save results to file 
         with open("results.txt", "a") as file:
-            file.write(f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} Haptics: {self.render_haptics}, Passed: {self.passed}, Time: {final_time:.2f}, Path_length: {self.path_length:.2f}\n")
+            file.write(f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}, Passed: {self.passed}, Time: {final_time:.2f}, Path_length: {self.path_length:.2f}, Damage: {self.damage} \n")
         
         # Wait for message from the operator to play again or not
         start_time = time.time()
@@ -149,11 +149,11 @@ class Submarine:
 
 if __name__=="__main__":
 
-    with open("results.txt", "a") as file:
-            file.write(f"Participant Name: {input('Enter Participants Name: ')}\n")
-        
     render_haptics = (sys.argv[1].lower() == "true") if len(sys.argv) > 1 else True
     play_again = True
+    with open("results.txt", "a") as file:
+            file.write(f"Participant Name: {input('Enter Participants Name: ')}, Haptic: {render_haptics}\n")
+        
     while play_again:
         submarine = Submarine(render_haptics)
         try:
