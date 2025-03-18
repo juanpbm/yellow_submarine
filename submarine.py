@@ -148,9 +148,12 @@ class Submarine:
 
 
 if __name__=="__main__":
-    play_again = True
+
+    with open("results.txt", "a") as file:
+            file.write(f"Participant Name: {input('Enter Participants Name: ')}\n")
+        
     render_haptics = (sys.argv[1].lower() == "true") if len(sys.argv) > 1 else True
-    print(render_haptics)
+    play_again = True
     while play_again:
         submarine = Submarine(render_haptics)
         try:
