@@ -209,6 +209,7 @@ class Graphics:
     def show_loading_screen(self, started = False, i=0):
         # Show Intro message
         if(not started):
+            self.window.fill(self.cBlack)
             init_text = "PRESS SPACE BAR TO BEGIN"
             init_font = pygame.font.Font('freesansbold.ttf', 30)
             init_text = init_font.render(init_text, True, self.cGreen, self.cBlack)
@@ -242,25 +243,25 @@ class Graphics:
         title_font = pygame.font.Font('freesansbold.ttf', 60)
         title_text = title_font.render(title_text, True, title_color, (0, 0, 0))
         title_text_rect = title_text.get_rect()
-        title_text_rect.center = (400, 100)
+        title_text_rect.center = (350, 100)
         self.window.blit(title_text, title_text_rect)
 
-        suma_text = f"Time: {final_time:.2f}s \n Path length {path_length:.2f} pixels \n Damage: {100 - damage}%"
-        suma_font = pygame.font.Font('freesansbold.ttf', 40)
+        suma_text = f"Time: {final_time:.2f}s \n Path length {path_length:.2f} pixels \n Damage: {damage}%"
+        suma_font = pygame.font.Font('freesansbold.ttf', 30)
         suma_lines = suma_text.split("\n")
         offset = 200
         for line in suma_lines:
             line = suma_font.render(line, True, self.cWhite, (0, 0, 0))
             line_rect = line.get_rect()
-            line_rect.center = (400, offset)
+            line_rect.center = (350, offset)
             self.window.blit(line, line_rect)
             offset += 40
 
         continue_text = f"Press y to play again, or any other key to quit"
-        continue_font = pygame.font.Font('freesansbold.ttf', 25)
+        continue_font = pygame.font.Font('freesansbold.ttf', 20)
         continue_text = continue_font.render(continue_text, True, self.cWhite, (0, 0, 0))
         continue_text_rect = continue_text.get_rect()
-        continue_text_rect.center = (400, 500)
+        continue_text_rect.center = (350, 400)
         self.window.blit(continue_text, continue_text_rect)
 
         pygame.display.flip() 

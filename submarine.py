@@ -9,9 +9,10 @@ from Physics import Physics
 from Graphics_submarine import Graphics
 
 class Submarine:
-    def __init__(self):
+    def __init__(self, render_haptics = True):
         self.physics = Physics(hardware_version=0, connect_device=False) #setup physics class. Returns a boolean indicating if a device is connected
         self.graphics = Graphics(False) #setup class for drawing and graphics.
+        self.render_haptics = render_haptics
         # Set up UDP sockets
         self.send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -73,8 +74,14 @@ class Submarine:
             pygame.quit() # stop pygame
             raise RuntimeError("Connection lost")
 
-        # TODO: Calculate forces for feedback
-        fe = np.array([0,0], dtype=np.float32)
+        # if the haptics are enabled then use the calculated forces.
+        if self.render_haptics:
+            # TODO: Calculate forces for feedback
+            fe = np.array([0,0], dtype=np.float32) # dummy
+        # if the haptics are disabled send 0 force
+        else: 
+            fe = np.array([0,0], dtype=np.float32)
+        
         # Send force the first 0 is the type of the message informing the operator that it is a force
         msg = np.array([0, *fe], dtype=np.float32)
         self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
@@ -114,7 +121,7 @@ class Submarine:
         print(f"Passed: {self.passed}, Time: {final_time:.2f}, Path_length: {self.path_length:.2f}")
         # save results to file 
         with open("results.txt", "a") as file:
-            file.write(f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} Passed: {self.passed}, Time: {final_time:.2f}, Path_length: {self.path_length:.2f}\n")
+            file.write(f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} Haptics: {self.render_haptics}, Passed: {self.passed}, Time: {final_time:.2f}, Path_length: {self.path_length:.2f}\n")
         
         # Wait for message from the operator to play again or not
         start_time = time.time()
@@ -142,9 +149,10 @@ class Submarine:
 
 if __name__=="__main__":
     play_again = True
-    
+    render_haptics = (sys.argv[1].lower() == "true") if len(sys.argv) > 1 else True
+    print(render_haptics)
     while play_again:
-        submarine = Submarine()
+        submarine = Submarine(render_haptics)
         try:
             while True:
                 submarine.run()
