@@ -158,9 +158,7 @@ if __name__=="__main__":
         name = sys.argv[2]
     except:
         name = "unknown"
-    
-    print(name, render_haptics)
-
+        
     play_again = True
     with open("results.txt", "a") as file:
             file.write(f"Participant Name: {name}, Haptic: {render_haptics}\n")
