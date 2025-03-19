@@ -64,7 +64,7 @@ class Submarine:
         self.haptic_length = 48
 
         # Constants for gravity, buoyancy, and damping
-        self.mass = 1  
+        self.mass = 0.5  
         self.water_density = 1025  
         self.gravity = 9.81  
         self.drag_coefficient = 1
@@ -84,8 +84,8 @@ class Submarine:
         ) 
 
         # Perturbation parameters
-        self.window_height = 400  
-        self.num_sections = 5  
+        self.window_height = 600  
+        self.num_sections = 10  
         self.section_height = self.window_height // self.num_sections  
         self.perturbations = []  # List to store active perturbations
 
@@ -94,7 +94,7 @@ class Submarine:
     def generate_perturbation(self):
      
         section = random.randint(0, self.num_sections - 1)  
-        amplitude = random.uniform(0.9, 1.0)  
+        amplitude = random.uniform(0.1, 0.6)  
         frequency = random.uniform(0.5, 2.0)  
         start_time = time.time()  
         duration = random.uniform(0.5, 1)  
@@ -171,9 +171,7 @@ class Submarine:
         if not hasattr(self, "prev_xh"):
             self.prev_xh = xh.copy()
 
-        v_h = ((xh - self.prev_xh) / g.window_scale) / dt
-        self.b_water = 0.5
-        f_hydro = np.array(-self.b_water * v_h)
+
 
         if random.random() < 0.1:
             self.perturbations.append(self.generate_perturbation())
@@ -181,22 +179,17 @@ class Submarine:
         f_wave = self.get_perturbation_force(xh)
 
         f_perturbation = -(self.mass * self.gravity - self.water_density * self.displaced_volume * self.gravity)
-        f_perturbation = np.array([0, f_perturbation]) + f_wave + f_hydro
+        f_perturbation = np.array([0, f_perturbation]) + f_wave
 
         fe = np.array([0, 0], dtype=np.float32)
-        fe += f_perturbation * 0.5
-        if (cursor.colliderect(g.object)) and (grab_object):
-            g.object.topleft=(cursor.bottomleft[0]-6,cursor.bottomleft[1]-6)
-            fe+=np.array([0,-9.8*(self.mass)])
+        fe += f_perturbation 
         
         haptic_rect = pygame.Rect(xh[0], xh[1], self.haptic_width, self.haptic_height)
 
         if haptic_rect.colliderect(self.wall):
             if xh[0] < self.wall.right: 
                 xh[0] = self.wall.right
-            
-            
-            print("here")
+
 
         if haptic_rect.colliderect(self.platform):
             if xh[1] < self.platform.left: 
@@ -207,7 +200,6 @@ class Submarine:
                 xh[0] = self.platform.top - self.haptic_height
             elif xh[0] > self.platform.bottom - self.haptic_height: 
                 xh[0] = self.platform.bottom
-            print("here")
 
         # Table collision (all sides)
         if haptic_rect.colliderect(self.table):
@@ -219,7 +211,6 @@ class Submarine:
                 xh[0] = self.table.top - self.haptic_height
             elif xh[0] > self.table.bottom - self.haptic_height:  
                 xh[0] = self.table.bottom
-            print("here")
         
         if haptic_rect.colliderect(self.ground):
             if xh[1] > self.ground.top - self.haptic_height:  
@@ -229,19 +220,35 @@ class Submarine:
             penetration_depth = max(0, self.fish_pos[0] + 40 - haptic_rect.left)
             fe[0] += (self.k_fish * penetration_depth/600)
 
-        self.send_sock.sendto(fe.tobytes(), ("127.0.0.1", 40001))
-
-        k_spring = 10
-        b_damping = 0.001
-        dt = 0.01
-        
-        f_vspring = k_spring * (xh-self.xc) / g.window_scale
         v_h = ((xh - self.prev_xh) / g.window_scale) / dt
+        self.b_water = 0.5
+        f_hydro = np.array(-self.b_water * v_h)
+        fe+=fe+f_hydro
+        
+
+        k_spring = 20
+        b_damping = 2
+        dt = 0.01
+
+        f_vspring = k_spring * (xh-self.xc) / g.window_scale
+        if not hasattr(self, "prev_vh"):
+            self.prev_vh = v_h.copy()
+        v_h = ((xh - self.prev_xh) / g.window_scale) / dt
+
+        a_h = ((v_h - self.prev_vh) / g.window_scale) / dt
         f_damping = b_damping * v_h
-        #print(fe, f_vspring + f_damping)
-        force = f_vspring + f_damping + fe
+        
+        f_inertia = self.mass* a_h
+        if (cursor.colliderect(g.object)) and (grab_object):
+            g.object.topleft=(cursor.bottomleft[0]-6,cursor.bottomleft[1]-6)
+            fe+=np.array([0,-9.8*(self.mass)])
+            fe+=f_inertia
+        force = f_vspring + f_damping + fe+f_inertia
+        self.send_sock.sendto(fe.tobytes(), ("127.0.0.1", 40001))
+        self.prev_xh = xh.copy()
+        self.prev_vh = v_h.copy()
         xh = g.sim_forces(xh, force, xm, mouse_k=0.5, mouse_b=0.8)
-        #print(force)
+        print(f_inertia,f_wave)
         # Ensure haptic device stays within the window bounds
         xh[0] = np.clip(xh[0], 0, g.window_size[0] - self.haptic_width)
         xh[1] = np.clip(xh[1], 0, g.window_size[1] - self.haptic_height)
