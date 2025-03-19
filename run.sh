@@ -1,2 +1,2 @@
 #!/bin/bash
-python remote_operator.py & python submarine.py &
+python remote_operator.py & python submarine.py 
