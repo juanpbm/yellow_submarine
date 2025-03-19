@@ -47,7 +47,7 @@ class Graphics:
         self.cOrange = (255,100,0)
         self.cYellow = (255,255,0)
         
-        self.hhandle = pygame.image.load('imgs/hand.png') #
+        self.hhandle = pygame.image.load('imgs/hand.png') 
         
         self.haptic_width = 48
         self.haptic_height = 48
@@ -70,10 +70,15 @@ class Graphics:
         self.submarine_pos = (int(self.window_size[0]/2.0 - 80), 10)
         self.device_origin = (int(self.window_size[0]/2.0), 110)
         
-        # Object
-        self.object = pygame.Rect((350, 520, 55, 55))
+        # Targets
+        self.anchor_img = pygame.image.load('imgs/anchor.png')
+        self.chest_img = pygame.image.load('imgs/chest.png')
+        self.bottle_img = pygame.image.load('imgs/bottle.png')
+        self.anchor = self.anchor_img.get_rect(topleft=(500, 490))
+        self.chest = self.chest_img.get_rect(topleft=(50, 255))
+        self.bottle = self.bottle_img.get_rect(topleft=(200, 542))
 
-        #Obstacles
+        # Obstacles
         self.fish_mode = 1
         self.fish_left = pygame.transform.scale(pygame.image.load('imgs/fish_left.png'), (40, 20))
         self.fish_right = pygame.transform.scale(pygame.image.load('imgs/fish_right.png'), (40, 20))
@@ -195,14 +200,16 @@ class Graphics:
         surface = pygame.surfarray.make_surface(pixels.swapaxes(0, 1))
         self.screenHaptics.blit(surface, (0, 0))
     
-    def render(self,pA0,pB0,pA,pB,pE,f,pM, pS, st, dam  ):
+    def render(self,pA0,pB0,pA,pB,pE,f,pM, pS, st, dam):
         ###################Render the Haptic Surface###################
         #set new position of items indicating the endpoint location
         self.haptic.center = pE #the hhandle image and effort square will also use this position for drawing
         self.effort_cursor.center = self.haptic.center
 
         # Draw Object
-        pygame.draw.rect(self.screenHaptics, "red", self.object)
+        self.screenHaptics.blit(self.anchor_img, self.anchor)
+        self.screenHaptics.blit(self.chest_img, self.chest)
+        self.screenHaptics.blit(self.bottle_img, self.bottle)
 
         # Draw Fish
         self.screenHaptics.blit(self.fish_dir, self.fish_pos)

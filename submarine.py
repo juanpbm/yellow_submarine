@@ -214,9 +214,9 @@ class Submarine:
             f_damping = b_damping * v_h
             
             f_inertia = self.mass* a_h
-            if (cursor.colliderect(g.object)) and (grab_object):
-                g.object.topleft=(cursor.bottomleft[0]-6,cursor.bottomleft[1]-10)
-                fe+=np.array([0,-9.8*(self.mass)])
+            if (cursor.colliderect(g.anchor)) and (grab_object):
+                g.anchor.topleft=(cursor.bottomleft[0]-24,cursor.bottomleft[1]-27)
+                fe+=np.array([0,-9.8*(0)])
                 fe+=f_inertia
             fe = f_vspring + f_damping + fe + f_inertia
 
