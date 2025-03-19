@@ -77,8 +77,15 @@ class Graphics:
         self.fish = [0,0,0]
 
         self.fish_dir = np.array([self.fish_right, self.fish_left, self.fish_right])
-        self.fish_mode = np.array([1,-1, 1])
         self.fish_pos = [[200,500],[400,550],[500,400]]
+        self.fish_mode = np.array([1,-1, 1])
+        
+        fish1 =self.fish_dir[0].get_rect(topleft=self.fish_pos[0])
+        fish2 =self.fish_dir[1].get_rect(topleft=self.fish_pos[1]) 
+        fish3 =self.fish_dir[2].get_rect(topleft=self.fish_pos[2]) 
+        
+        self.fish_rect = np.array([fish1, fish2, fish3])
+        
         
         if(num_fish >= 1):
             self.fish[0] = 1
@@ -196,7 +203,7 @@ class Graphics:
         ###################Render the Haptic Surface###################
         #set new position of items indicating the endpoint location
         # fish
-        self.render_fish()
+        
         self.haptic.center = pE #the hhandle image and effort square will also use this position for drawing
         self.effort_cursor.center = self.haptic.center
 
@@ -270,7 +277,9 @@ class Graphics:
                     self.fish_dir[n] = self.fish_right
                     
                 self.fish_pos[n][0] += self.fish_mode[n]
-
+                fish_new =self.fish_dir[n].get_rect(topleft=self.fish_pos[n]) 
+                
+                self.fish_rect[n] = fish_new
 
     def close(self):
         pygame.display.quit()

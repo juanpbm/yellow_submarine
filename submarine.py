@@ -12,7 +12,7 @@ from Graphics_submarine import Graphics
 class Submarine:
     def __init__(self):
         self.physics = Physics(hardware_version=0, connect_device=False) #setup physics class. Returns a boolean indicating if a device is connected
-        self.graphics = Graphics(False,3) #setup class for drawing and graphics.
+        self.graphics = Graphics(False,1) #setup class for drawing and graphics.
         self.send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock.bind(("127.0.0.1", 40002))
@@ -91,6 +91,17 @@ class Submarine:
         self.send_sock.sendto(fe.tobytes(), ("127.0.0.1", 40001))
 
         xh = g.sim_forces(xh,fe,xm,mouse_k=0.5,mouse_b=0.8) #simulate forces with mouse haptics
+        
+        g.render_fish()
+        
+        for n,f in enumerate(g.fish):
+            if(f == 1):
+                if(g.effort_cursor.colliderect(g.fish_rect[n])):
+                    print("Collision: " +str(n))
+                
+
+                    
+
         
         if(xh[1] >=550):
             xh[1] = 550
