@@ -10,8 +10,9 @@ from Graphics_submarine import Graphics
 
 class Submarine:
     def __init__(self, render_haptics = True):
+        self.max_time = 2 * 60 # "T_minutes" * 60s = T_seconds 
         self.physics = Physics(hardware_version=0, connect_device=False) #setup physics class. Returns a boolean indicating if a device is connected
-        self.graphics = Graphics(False) #setup class for drawing and graphics.
+        self.graphics = Graphics(False, max_time=self.max_time) #setup class for drawing and graphics.
         self.render_haptics = render_haptics
         # Set up UDP sockets
         self.send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -45,7 +46,6 @@ class Submarine:
         self.damage = 0 # percentage
         self.path_length = 0 # pixels
         self.init_time = time.time() # seconds
-        self.max_time = 0.1 * 60 # "T_minutes" * 60s = T_seconds 
     
     def run(self):
         p = self.physics #assign these to shorthand variables for easier use in this function
@@ -96,7 +96,8 @@ class Submarine:
         pB = (pB[0] / 4, pB[1] / 4)
         pE = (pE[0] / 2, pE[1])
         pA0,pB0,pA,pB,xh = g.convert_pos(pA0,pB0,pA,pB,pE) #convert the physical positions to screen coordinates
-        g.render(pA0,pB0,pA,pB,xh,fe,xm,xs)  # Render environment
+        g.render(pA0,pB0,pA,pB,xh,fe,xm,xs, self.init_time, self.damage)  # Render environment
+        self.damage += 0.1
         
         # Skip First iteration as the distance should be 0
         if not self.first:
@@ -118,10 +119,10 @@ class Submarine:
         # Send metrics the first element is 1, the type of the message informing the operator that it is a metrics message
         self.send_sock.sendto(results.tobytes(), ("127.0.0.1", 40001))
         # print metrics to make sure they were recieved correctly
-        print(f"Passed: {self.passed}, Time: {final_time:.2f}, Path_length: {self.path_length:.2f}")
+        print(f"Passed: {self.passed}, Time: {final_time:.2f}, Path_length: {self.path_length:.2f}, damage: {self.damage:.0f}")
         # save results to file 
         with open("results.txt", "a") as file:
-            file.write(f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}, Passed: {self.passed}, Time: {final_time:.2f}, Path_length: {self.path_length:.2f}, Damage: {self.damage} \n")
+            file.write(f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}, Passed: {self.passed}, Time: {final_time:.2f}, Path_length: {self.path_length:.2f}, Damage: {self.damage:.0f} \n")
         
         # Wait for message from the operator to play again or not
         start_time = time.time()
@@ -134,7 +135,7 @@ class Submarine:
                 break
             except:
                 # add a 2min time-out to prevent an infinite loop.
-                if (time.time() - start_time > 120):
+                if (time.time() - start_time > 60):
                     break
                 continue
 
@@ -151,8 +152,8 @@ if __name__=="__main__":
 
     render_haptics = (sys.argv[1].lower() == "true") if len(sys.argv) > 1 else True
     play_again = True
-    with open("results.txt", "a") as file:
-            file.write(f"Participant Name: {input('Enter Participants Name: ')}, Haptic: {render_haptics}\n")
+    # with open("results.txt", "a") as file:
+    #         file.write(f"Participant Name: {input('Enter Participants Name: ')}, Haptic: {render_haptics}\n")
         
     while play_again:
         submarine = Submarine(render_haptics)

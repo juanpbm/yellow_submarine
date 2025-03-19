@@ -9,7 +9,7 @@ from Graphics_operator import Graphics
 
 class RemoteOperator:
     def __init__(self):
-        self.physics = Physics(hardware_version=3) #setup physics class. Returns a boolean indicating if a device is connected
+        self.physics = Physics(hardware_version=3, connect_device=False) #setup physics class. Returns a boolean indicating if a device is connected
         self.device_connected = self.physics.is_device_connected() #returns True if a connected haply device was found
         self.graphics = Graphics(self.device_connected) #setup class for drawing and graphics.
         
