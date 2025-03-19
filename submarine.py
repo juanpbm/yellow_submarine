@@ -154,14 +154,8 @@ class Submarine:
         g.get_events()
         xs = np.array(g.submarine_pos)
         xh = np.array(g.haptic.center, dtype=np.float64) #make sure fe is a numpy array
-        xh_prev = np.array(g.haptic.center, dtype=np.float64) #make sure fe is a numpy array
         g.erase_screen()
-        g.screenHaptics.blit(self.fish_dir, self.fish_pos)
         cursor=g.effort_cursor
-        pygame.draw.rect(g.screenHaptics, self.dBrown, self.wall)
-        pygame.draw.rect(g.screenHaptics, self.dGray, self.platform)
-        pygame.draw.rect(g.screenHaptics, self.bGray, self.table)
-        pygame.draw.rect(g.screenHaptics, self.Sand, self.ground)
         
         # Receive and process messages
         try:
@@ -178,6 +172,7 @@ class Submarine:
         except socket.timeout:
             pygame.quit()
             raise RuntimeError("Connection lost")
+        
         if self.render_haptics:
             dt = 0.01
 
@@ -220,7 +215,7 @@ class Submarine:
             
             f_inertia = self.mass* a_h
             if (cursor.colliderect(g.object)) and (grab_object):
-                g.object.topleft=(cursor.bottomleft[0]-6,cursor.bottomleft[1]-6)
+                g.object.topleft=(cursor.bottomleft[0]-6,cursor.bottomleft[1]-10)
                 fe+=np.array([0,-9.8*(self.mass)])
                 fe+=f_inertia
             fe = f_vspring + f_damping + fe + f_inertia
@@ -249,7 +244,6 @@ class Submarine:
         pE = (pE[0] / 2, pE[1])
         pA0, pB0, pA, pB, xh = g.convert_pos(pA0, pB0, pA, pB, pE)
         g.render(pA0, pB0, pA, pB, xh, fe, xm, xs, self.init_time, self.damage)  # Render environment
-        self.damage += 0.1
 
         if self.fish_pos[0] >= 550 and self.fish_dir == self.fish_right:
             self.fish_mode = -1
@@ -265,7 +259,7 @@ class Submarine:
             self.first = True
         # Get distance traveled from the previous frame to update the path length
         else:
-            self.path_length += np.linalg.norm(xh_prev - np.ceil(xh))
+            self.path_length += np.linalg.norm(self.prev_xh - np.ceil(xh))
 
         # Check if game is over
         print(time.time() - self.init_time, self.damage, (time.time() - self.init_time >= self.max_time or self.damage >= 100))

@@ -70,7 +70,6 @@ class Graphics:
         self.submarine_pos = (int(self.window_size[0]/2.0 - 80), 10)
         self.device_origin = (int(self.window_size[0]/2.0), 110)
         
-        
         # Object
         self.object = pygame.Rect((350, 520, 55, 55))
 
@@ -202,6 +201,10 @@ class Graphics:
         self.haptic.center = pE #the hhandle image and effort square will also use this position for drawing
         self.effort_cursor.center = self.haptic.center
 
+        # Draw Object
+        pygame.draw.rect(self.screenHaptics, "red", self.object)
+
+        # Draw Fish
         self.screenHaptics.blit(self.fish_dir, self.fish_pos)
         pygame.draw.rect(self.screenHaptics,self.dBrown,self.wall)
         pygame.draw.rect(self.screenHaptics,self.dGray,self.platform)
