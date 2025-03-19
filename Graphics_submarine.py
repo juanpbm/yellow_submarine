@@ -77,7 +77,7 @@ class Graphics:
         self.fish = [0,0,0]
 
         self.fish_dir = np.array([self.fish_right, self.fish_left, self.fish_right])
-        self.fish_pos = [[200,500],[400,550],[500,400]]
+        self.fish_pos = [[200,500],[500,400],[400,550]]
         self.fish_mode = np.array([1,-1, 1])
         
         fish1 =self.fish_dir[0].get_rect(topleft=self.fish_pos[0])
@@ -93,6 +93,15 @@ class Graphics:
             self.fish[1] = 1
         if(num_fish >= 3):
             self.fish[2] = 1
+            
+        self.wall = pygame.Rect(0, 300, 185, 600)
+        self.platform = pygame.Rect(600, 400, 800, 600)
+        self.table = pygame.Rect(630, 400, 800, 25)
+        self.ground = pygame.Rect(185, 575, 415, 50)
+        self.dGray = (50,50,50)
+        self.bGray = (230,230,230)
+        self.dBrown = (92, 64, 51)
+        self.Sand = (198, 166, 100)
 
 
     def convert_pos(self,*positions):
@@ -277,7 +286,11 @@ class Graphics:
                     self.fish_dir[n] = self.fish_right
                     
                 self.fish_pos[n][0] += self.fish_mode[n]
-                fish_new =self.fish_dir[n].get_rect(topleft=self.fish_pos[n]) 
+                pos_new = [0,0]
+                pos_new[0] = self.fish_pos[n][0] 
+                pos_new[1] = self.fish_pos[n][1]
+
+                fish_new =self.fish_dir[n].get_rect(topleft=pos_new) 
                 
                 self.fish_rect[n] = fish_new
 

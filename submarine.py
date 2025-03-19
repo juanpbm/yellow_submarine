@@ -5,15 +5,18 @@ import pygame
 import socket
 import time
 
+import math
+
 from Physics import Physics
 from Graphics_submarine import Graphics
 
-        
+
+
 
 class Submarine:
     def __init__(self, render_haptics = True):
         self.physics = Physics(hardware_version=0, connect_device=False) #setup physics class. Returns a boolean indicating if a device is connected
-        self.graphics = Graphics(False,1) #setup class for drawing and graphics.
+        self.graphics = Graphics(False,2) #setup class for drawing and graphics.
         self.render_haptics = render_haptics
         # Set up UDP sockets
         self.send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -21,22 +24,9 @@ class Submarine:
         self.recv_sock.bind(("127.0.0.1", 40002))
         self.recv_sock.setblocking(False)
         
-        self.fish_left = pygame.transform.scale(pygame.image.load('imgs/fish_left.png'), (40, 20))
-        self.fish_right = pygame.transform.scale(pygame.image.load('imgs/fish_right.png'), (40, 20))
-        self.fish_dir = self.fish_right
-        #self.fish_pos = np.array([200,400])
-        self.fish_pos = np.array([400,400])
-        
-        self.fish_mode = 1
-        
-        self.wall = pygame.Rect(0, 300, 185, 600)
-        self.platform = pygame.Rect(600, 400, 800, 600)
-        self.table = pygame.Rect(630, 400, 800, 25)
-        self.ground = pygame.Rect(185, 575, 415, 50)
-        self.dGray = (50,50,50)
-        self.bGray = (230,230,230)
-        self.dBrown = (92, 64, 51)
-        self.Sand = (198, 166, 100)
+        self.pAl = [0,0]
+        self.pBl = [0,0]
+        self.pEl = [0,0]
         #self.wall = pygame.Rect(xc, yc, 300, 300)
 
         # Wait for at least one message from the master. Only continue once something is received.
@@ -65,7 +55,7 @@ class Submarine:
         self.damage = 0 # percentage
         self.path_length = 0 # pixels
         self.init_time = time.time() # seconds
-        self.max_time = 0.1 * 60 # "T_minutes" * 60s = T_seconds 
+        self.max_time = 1.0 * 60 # "T_minutes" * 60s = T_seconds 
     
     def run(self):
         p = self.physics #assign these to shorthand variables for easier use in this function
@@ -77,10 +67,10 @@ class Submarine:
         xh_prev = np.array(g.haptic.center, dtype=np.float64) #make sure fe is a numpy array
         g.erase_screen()
         #g.screenHaptics.blit(self.fish_dir, self.fish_pos)
-        pygame.draw.rect(g.screenHaptics,self.dBrown,self.wall)
-        pygame.draw.rect(g.screenHaptics,self.dGray,self.platform)
-        pygame.draw.rect(g.screenHaptics,self.bGray,self.table)
-        pygame.draw.rect(g.screenHaptics,self.Sand,self.ground)
+        pygame.draw.rect(g.screenHaptics,g.dBrown,g.wall)
+        pygame.draw.rect(g.screenHaptics,g.dGray,g.platform)
+        pygame.draw.rect(g.screenHaptics,g.bGray,g.table)
+        pygame.draw.rect(g.screenHaptics,g.Sand,g.ground)
         
         # Receive and process messages
         try:
@@ -116,10 +106,14 @@ class Submarine:
         
         g.render_fish()
         
-        for n,f in enumerate(g.fish):
-            if(f == 1):
-                if(g.effort_cursor.colliderect(g.fish_rect[n])):
-                    print("Collision: " +str(n))
+
+        # Check collision with fish
+        for n, f in enumerate(g.fish):
+            if f == 1:              
+                # Check distance from fish to each line
+                if (g.effort_cursor.colliderect(g.fish_rect[n]) or 
+                    (xh[1] >= g.fish_pos[n][1] and (np.abs(g.fish_pos[n][0] - xh[0])<50))):
+                    print(f"COLLISTION---------: {n}")
                 
 
                     
@@ -129,6 +123,9 @@ class Submarine:
             xh[1] = 550
         pos_phys = g.inv_convert_pos(xh)
         pA0,pB0,pA,pB,pE = p.derive_device_pos(pos_phys) #derive the pantograph joint positions given some endpoint position
+        self.pAl = pA
+        self.pBl = pB
+        self.pEl = pE
         # Scale the physics results for submarine size
         pB0 = pA0
         pA = (pA[0] / 3, pA[1] / 3)
@@ -150,8 +147,8 @@ class Submarine:
             self.passed = False
             raise RuntimeError("Game Finished")
         
-
-        
+ 
+    
     def close(self):
         # Get Metrics 
         final_time = time.time() - self.init_time
@@ -192,8 +189,8 @@ if __name__=="__main__":
 
     render_haptics = (sys.argv[1].lower() == "true") if len(sys.argv) > 1 else True
     play_again = True
-    with open("results.txt", "a") as file:
-            file.write(f"Participant Name: {input('Enter Participants Name: ')}, Haptic: {render_haptics}\n")
+    #with open("results.txt", "a") as file:
+    #        file.write(f"Participant Name: {input('Enter Participants Name: ')}, Haptic: {render_haptics}\n")
         
     while play_again:
         submarine = Submarine(render_haptics)
