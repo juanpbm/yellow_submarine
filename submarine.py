@@ -3,13 +3,9 @@ import sys
 import numpy as np
 import pygame
 import socket
-<<<<<<< HEAD
 import random
 import time
 import math
-=======
-import time
->>>>>>> origin/display
 
 from Physics import Physics
 from Graphics_submarine import Graphics
@@ -64,8 +60,8 @@ class Submarine:
                 self.graphics.show_loading_screen(i)
                 i += 1
                 pass
-<<<<<<< HEAD
-                self.mass=0.5
+        
+        self.mass=0.5
         self.haptic_width = 48
         self.haptic_height = 48
         self.haptic_length = 48
@@ -82,8 +78,6 @@ class Submarine:
         )  
         self.b_water = 0.5 * self.water_density * self.drag_coefficient * self.cross_sectional_area
 
-
-        
         self.displaced_volume = (
             (self.haptic_width / self.graphics.window_scale)
             * (self.haptic_height / self.graphics.window_scale)
@@ -97,6 +91,14 @@ class Submarine:
         self.perturbations = []  # List to store active perturbations
 
         self.k_fish = 50  
+
+        # Init Metrics variables
+        self.passed = False
+        self.first = False
+        self.damage = 0 # percentage
+        self.path_length = 0 # pixels
+        self.init_time = time.time() # seconds
+        self.max_time = 1 * 60 # "T_minutes" * 60s = T_seconds 
 
     def generate_perturbation(self):
      
@@ -145,24 +147,14 @@ class Submarine:
         self.perturbations = new_perturbations  
 
         return perturbation_force
-=======
-
-        # Init Metrics variables
-        self.passed = False
-        self.first = False
-        self.damage = 0 # percentage
-        self.path_length = 0 # pixels
-        self.init_time = time.time() # seconds
-        self.max_time = 0.1 * 60 # "T_minutes" * 60s = T_seconds 
->>>>>>> origin/display
     
     def run(self):
         p = self.physics
         g = self.graphics
         g.get_events()
         xs = np.array(g.submarine_pos)
-<<<<<<< HEAD
-        xh = np.array(g.haptic.center, dtype=np.float64)
+        xh = np.array(g.haptic.center, dtype=np.float64) #make sure fe is a numpy array
+        xh_prev = np.array(g.haptic.center, dtype=np.float64) #make sure fe is a numpy array
         g.erase_screen()
         g.screenHaptics.blit(self.fish_dir, self.fish_pos)
         cursor=g.effort_cursor
@@ -170,129 +162,69 @@ class Submarine:
         pygame.draw.rect(g.screenHaptics, self.dGray, self.platform)
         pygame.draw.rect(g.screenHaptics, self.bGray, self.table)
         pygame.draw.rect(g.screenHaptics, self.Sand, self.ground)
-
-        try:
-            recv_data, _ = self.recv_sock.recvfrom(1024)
-=======
-        xh = np.array(g.haptic.center, dtype=np.float64) #make sure fe is a numpy array
-        xh_prev = np.array(g.haptic.center, dtype=np.float64) #make sure fe is a numpy array
-        g.erase_screen()
         
         # Receive and process messages
         try:
             # Receive position
             recv_data, _ = self.recv_sock.recvfrom(64)
->>>>>>> origin/display
             data = np.array(np.frombuffer(recv_data, dtype=np.float64))
             xm = data[:2]
             xm[0] = np.clip(xm[0] + ((g.submarine_pos[0] + 177) - (g.window_size[0] / 2)), -100, g.window_size[0] + 100)
             xm[1] = np.clip((xm[1] * 1.3), 0, g.window_size[1] + 75)
             xm = np.array(xm, dtype=int)
-            xs = np.array(data[2:], dtype=int)
-<<<<<<< HEAD
+            xs = np.array(data[2:4], dtype=int)
             grab_object=data[4]
-=======
         # If there is a timeout the connection with the operator has been lost
->>>>>>> origin/display
         except socket.timeout:
             pygame.quit()
             raise RuntimeError("Connection lost")
-
-<<<<<<< HEAD
-        dt = 0.01
-
-        if not hasattr(self, "prev_xh"):
-            self.prev_xh = xh.copy()
-
-
-
-        if random.random() < 0.1:
-            self.perturbations.append(self.generate_perturbation())
-
-        f_wave = self.get_perturbation_force(xh)
-
-        f_perturbation = -(self.mass * self.gravity - self.water_density * self.displaced_volume * self.gravity)
-        f_perturbation = np.array([0, f_perturbation]) + f_wave
-
-        fe = np.array([0, 0], dtype=np.float32)
-        fe += f_perturbation 
-        
-        haptic_rect = pygame.Rect(xh[0], xh[1], self.haptic_width, self.haptic_height)
-
-        if haptic_rect.colliderect(self.wall):
-            if xh[0] < self.wall.right: 
-                xh[0] = self.wall.right
-
-
-        if haptic_rect.colliderect(self.platform):
-            if xh[1] < self.platform.left: 
-                xh[1] = self.platform.left - self.haptic_width
-            elif xh[1] > self.platform.right - self.haptic_width: 
-                xh[1] = self.platform.right
-            if xh[0] < self.platform.top: 
-                xh[0] = self.platform.top - self.haptic_height
-            elif xh[0] > self.platform.bottom - self.haptic_height: 
-                xh[0] = self.platform.bottom
-
-        # Table collision (all sides)
-        if haptic_rect.colliderect(self.table):
-            if xh[1] < self.table.left:  
-                xh[1] = self.table.left - self.haptic_width
-            elif xh[1] > self.table.right - self.haptic_width:  
-                xh[1] = self.table.right
-            if xh[0] < self.table.top:  
-                xh[0] = self.table.top - self.haptic_height
-            elif xh[0] > self.table.bottom - self.haptic_height:  
-                xh[0] = self.table.bottom
-        
-        if haptic_rect.colliderect(self.ground):
-            if xh[1] > self.ground.top - self.haptic_height:  
-                xh[1] = self.ground.top - self.haptic_height
-
-        if haptic_rect.colliderect(pygame.Rect(self.fish_pos[0], self.fish_pos[1], 40, 20)):
-            penetration_depth = max(0, self.fish_pos[0] + 40 - haptic_rect.left)
-            fe[0] += (self.k_fish * penetration_depth/600)
-
-        v_h = ((xh - self.prev_xh) / g.window_scale) / dt
-        self.b_water = 0.5
-        f_hydro = np.array(-self.b_water * v_h)
-        fe+=fe+f_hydro
-        
-
-        k_spring = 20
-        b_damping = 2
-        dt = 0.01
-
-        f_vspring = k_spring * (xh-self.xc) / g.window_scale
-        if not hasattr(self, "prev_vh"):
-            self.prev_vh = v_h.copy()
-        v_h = ((xh - self.prev_xh) / g.window_scale) / dt
-
-        a_h = ((v_h - self.prev_vh) / g.window_scale) / dt
-        f_damping = b_damping * v_h
-        
-        f_inertia = self.mass* a_h
-        if (cursor.colliderect(g.object)) and (grab_object):
-            g.object.topleft=(cursor.bottomleft[0]-6,cursor.bottomleft[1]-6)
-            fe+=np.array([0,-9.8*(self.mass)])
-            fe+=f_inertia
-        force = f_vspring + f_damping + fe+f_inertia
-        self.send_sock.sendto(fe.tobytes(), ("127.0.0.1", 40001))
-        self.prev_xh = xh.copy()
-        self.prev_vh = v_h.copy()
-        xh = g.sim_forces(xh, force, xm, mouse_k=0.5, mouse_b=0.8)
-        print(f_inertia,f_wave)
-        # Ensure haptic device stays within the window bounds
-        xh[0] = np.clip(xh[0], 0, g.window_size[0] - self.haptic_width)
-        xh[1] = np.clip(xh[1], 0, g.window_size[1] - self.haptic_height)
-
-        pos_phys = g.inv_convert_pos(xh)
-        pA0, pB0, pA, pB, pE = p.derive_device_pos(pos_phys)
-=======
-        # if the haptics are enabled then use the calculated forces.
         if self.render_haptics:
-            # TODO: Calculate forces for feedback
-            fe = np.array([0,0], dtype=np.float32) # dummy
+            dt = 0.01
+
+            if not hasattr(self, "prev_xh"):
+                self.prev_xh = xh.copy()
+
+            if random.random() < 0.1:
+                self.perturbations.append(self.generate_perturbation())
+
+            f_wave = self.get_perturbation_force(xh)
+
+            f_perturbation = -(self.mass * self.gravity - self.water_density * self.displaced_volume * self.gravity)
+            f_perturbation = np.array([0, f_perturbation]) + f_wave
+
+            fe = np.array([0, 0], dtype=np.float32)
+            fe += f_perturbation 
+            
+            haptic_rect = pygame.Rect(xh[0], xh[1], self.haptic_width, self.haptic_height)
+
+            if haptic_rect.colliderect(pygame.Rect(self.fish_pos[0], self.fish_pos[1], 40, 20)):
+                penetration_depth = max(0, self.fish_pos[0] + 40 - haptic_rect.left)
+                fe[0] += (self.k_fish * penetration_depth/600)
+
+            v_h = ((xh - self.prev_xh) / g.window_scale) / dt
+            self.b_water = 0.5
+            f_hydro = np.array(-self.b_water * v_h)
+            fe += f_hydro
+            
+            k_spring = 20
+            b_damping = 2
+            dt = 0.01
+
+            f_vspring = k_spring * (xh-self.xc) / g.window_scale
+            if not hasattr(self, "prev_vh"):
+                self.prev_vh = v_h.copy()
+            v_h = ((xh - self.prev_xh) / g.window_scale) / dt
+
+            a_h = ((v_h - self.prev_vh) / g.window_scale) / dt
+            f_damping = b_damping * v_h
+            
+            f_inertia = self.mass* a_h
+            if (cursor.colliderect(g.object)) and (grab_object):
+                g.object.topleft=(cursor.bottomleft[0]-6,cursor.bottomleft[1]-6)
+                fe+=np.array([0,-9.8*(self.mass)])
+                fe+=f_inertia
+            fe = f_vspring + f_damping + fe + f_inertia
+
         # if the haptics are disabled send 0 force
         else: 
             fe = np.array([0,0], dtype=np.float32)
@@ -301,19 +233,22 @@ class Submarine:
         msg = np.array([0, *fe], dtype=np.float32)
         self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
 
+        self.prev_xh = xh.copy()
+        self.prev_vh = v_h.copy()
         # Process the forces and position to render the environment
         xh = g.sim_forces(xh,fe,xm,mouse_k=0.5,mouse_b=0.8) #simulate forces with mouse haptics
+        # Ensure haptic device stays within the window bounds
+        xh[0] = np.clip(xh[0], 0, g.window_size[0] - self.haptic_width)
+        xh[1] = np.clip(xh[1], 0, g.window_size[1] - self.haptic_height)
         pos_phys = g.inv_convert_pos(xh)
         pA0,pB0,pA,pB,pE = p.derive_device_pos(pos_phys) #derive the pantograph joint positions given some endpoint position
         # Scale the physics results for submarine size
->>>>>>> origin/display
         pB0 = pA0
         pA = (pA[0] / 3, pA[1] / 3)
         pB = (pB[0] / 4, pB[1] / 4)
         pE = (pE[0] / 2, pE[1])
-<<<<<<< HEAD
         pA0, pB0, pA, pB, xh = g.convert_pos(pA0, pB0, pA, pB, pE)
-        g.render(pA0, pB0, pA, pB, xh, force, xm, xs)
+        g.render(pA0, pB0, pA, pB, xh, fe, xm, xs)
 
         if self.fish_pos[0] >= 550 and self.fish_dir == self.fish_right:
             self.fish_mode = -1
@@ -323,9 +258,6 @@ class Submarine:
             self.fish_dir = self.fish_right
 
         self.fish_pos[0] += self.fish_mode
-=======
-        pA0,pB0,pA,pB,xh = g.convert_pos(pA0,pB0,pA,pB,pE) #convert the physical positions to screen coordinates
-        g.render(pA0,pB0,pA,pB,xh,fe,xm,xs)  # Render environment
         
         # Skip First iteration as the distance should be 0
         if not self.first:
@@ -339,7 +271,6 @@ class Submarine:
         if (time.time() - self.init_time >= self.max_time or self.damage >= 100):
             self.passed = False
             raise RuntimeError("Game Finished")
->>>>>>> origin/display
         
     def close(self):
         # Get Metrics 

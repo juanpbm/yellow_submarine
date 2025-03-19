@@ -93,12 +93,9 @@ class RemoteOperator:
         # Send Position from the haptic device or mouse and the submarine position
         message = np.array([xh, self.xs,(self.grab_object,0)])
         self.send_sock.sendto(message.tobytes(), ("127.0.0.1", 40002))
-<<<<<<< HEAD
-=======
 
         # Receive Force feedback
         last_message = np.array([0,0,0])
->>>>>>> origin/display
         try:
             while True:
                 try:
