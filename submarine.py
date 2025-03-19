@@ -150,10 +150,20 @@ class Submarine:
 
 if __name__=="__main__":
 
-    render_haptics = (sys.argv[1].lower() == "true") if len(sys.argv) > 1 else True
+    try:
+        render_haptics = sys.argv[1].lower() == "true"
+    except:
+        render_haptics = True
+    try:
+        name = sys.argv[2]
+    except:
+        name = "unknown"
+    
+    print(name, render_haptics)
+
     play_again = True
-    # with open("results.txt", "a") as file:
-    #         file.write(f"Participant Name: {input('Enter Participants Name: ')}, Haptic: {render_haptics}\n")
+    with open("results.txt", "a") as file:
+            file.write(f"Participant Name: {name}, Haptic: {render_haptics}\n")
         
     while play_again:
         submarine = Submarine(render_haptics)
