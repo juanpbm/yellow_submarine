@@ -6,7 +6,7 @@ import os
 import time 
 
 class Graphics:
-    def __init__(self,device_connected,window_size=(800,600), max_time=10.0):
+    def __init__(self,device_connected,window_size=(800,600), max_time=1.0):
         self.device_connected = device_connected
         self.max_time = max_time
         #initialize pygame window
