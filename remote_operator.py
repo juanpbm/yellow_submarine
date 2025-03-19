@@ -118,9 +118,11 @@ class RemoteOperator:
                 # if not play again end the operator
                 if not play_again:
                     raise RuntimeError('Game Over')
-                # if play again show the loading screen and wait for user input to start
+                # if play again show the loading screen and wait for user input to start and reset submarine position
                 g.erase_screen()
                 g.show_loading_screen()
+                self.xs = np.array([320, 10], dtype=np.float64) 
+
                 run = True
                 while run:
                     keyups, _, _= self.graphics.get_events()
