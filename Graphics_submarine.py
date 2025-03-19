@@ -3,11 +3,12 @@ import pygame
 import numpy as np
 import sys 
 import os
+import time 
 
 class Graphics:
-    def __init__(self,device_connected,window_size=(800,600)):
+    def __init__(self,device_connected,window_size=(800,600), max_time=1.0):
         self.device_connected = device_connected
-        
+        self.max_time = max_time
         #initialize pygame window
         self.window_size = window_size #default (600,400)
         os.environ['SDL_VIDEO_WINDOW_POS'] = "20,100"
@@ -163,7 +164,7 @@ class Graphics:
         # plot hight map
         self.screenHaptics.fill(self.cWhite) #erase the haptics surface
         pixels = np.zeros((self.window_size[1], self.window_size[0], 3), dtype=np.uint8)  # Create empty image
-        Y_color = np.linspace(255, 0, self.window_size[1])[:, None]  # Gradient from 255 (top) to 0 (bottom)
+        Y_color = np.linspace(255, 100, self.window_size[1])[:, None]  # Gradient from 255 (top) to 0 (bottom)
 
         # Apply the gradient to the blue channel
         pixels[:, :, 0] = 0  
@@ -174,17 +175,11 @@ class Graphics:
         surface = pygame.surfarray.make_surface(pixels.swapaxes(0, 1))
         self.screenHaptics.blit(surface, (0, 0))
     
-    def render(self,pA0,pB0,pA,pB,pE,f,pM, pS):
+    def render(self,pA0,pB0,pA,pB,pE,f,pM, pS, st, dam  ):
         ###################Render the Haptic Surface###################
         #set new position of items indicating the endpoint location
         self.haptic.center = pE #the hhandle image and effort square will also use this position for drawing
         self.effort_cursor.center = self.haptic.center
-
-        if self.device_connected:
-            self.effort_color = (255,255,255)
-
-        #pygame.draw.rect(self.screenHaptics, self.effort_color, self.haptic,border_radius=4)
-        pygame.draw.rect(self.screenHaptics, self.effort_color, self.effort_cursor,border_radius=8)
 
         ######### Robot visualization ###################
         if self.show_linkages:
@@ -211,8 +206,26 @@ class Graphics:
         self.device_origin = (pS[0] + 75, pS[1] + 90)
         self.screenHaptics.blit(self.submarine_dir, self.submarine_pos)
 
-        if not self.device_connected:
-            pygame.draw.lines(self.screenHaptics, (0,0,0), False,[self.effort_cursor.center,pM],2)
+        # Display time
+        remaining_time = max(0, self.max_time - (time.time() - st))
+        time_text = f"T: {int(remaining_time//60)}:{int(remaining_time%60)}"
+        time_font = pygame.font.Font('freesansbold.ttf', 20)
+        time_text = time_font.render(time_text, True, (255, 255, 255), (0, 0, 0))
+        time_text_rect = time_text.get_rect()
+        time_text_rect.bottomleft = (5, 600)
+        self.screenHaptics.blit(time_text, time_text_rect)
+
+        #Display damage
+        damage_text = "Health: "
+        damage_font = pygame.font.Font('freesansbold.ttf', 20)
+        damage_text = damage_font.render(damage_text, True, (255, 255, 255), (0, 0, 0))
+        damage_text_rect = damage_text.get_rect()
+        damage_text_rect.bottomleft = (615, 599)
+        self.screenHaptics.blit(damage_text, damage_text_rect)
+        pygame.draw.rect(self.screenHaptics, (100, 100, 100), (695, 573, 100, 25), border_radius=5)
+        # Draw progress fill (green)
+        pygame.draw.rect(self.screenHaptics, (255 * ((dam/100)), 255 * (1-(dam/100)), 0), (695, 573, 100 * (1-(dam/100)), 25), border_radius=5)
+
         ##Fuse it back together
         self.window.blit(self.screenHaptics, (0,0))
 
