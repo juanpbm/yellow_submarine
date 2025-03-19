@@ -88,13 +88,48 @@ class RemoteOperator:
         self.send_sock.sendto(message.tobytes(), ("127.0.0.1", 40002))
 
         # Receive Force feedback
+        last_message = np.array([0,0,0])
         try:
-            recv_data, _ = self.recv_sock.recvfrom(1024)
-            fe = np.frombuffer(recv_data, dtype=np.float32)
-            # TODO: Scale the feedback to make it stable
-            fe = np.array(fe, dtype=np.float32)
+            while True:
+                try:
+                    # Empty buffer TODO: check that forces are still ok
+                    while True:  # Keep reading until the buffer is empty
+                        self.recv_sock.settimeout(0.01)
+                        recv_data, _ = self.recv_sock.recvfrom(1024)
+                        last_message = recv_data  # Store the latest message
+                except socket.timeout:
+                    self.recv_sock.settimeout(1)
+                    break  # Exit loop when no more data is available
+            # process the last message
+            rcv_msg = np.frombuffer(last_message, dtype=np.float32)
+            # is the first element is 0 it is a force message
+            if (int(rcv_msg[0]) == 0 ):
+                # TODO: Scale the feedback to make it stable
+                fe = np.array(rcv_msg[1:], dtype=np.float32)
+            # if the first element is a 1 is a metrics and game over message
+            else:
+                passed, final_time, path_length, damage = rcv_msg[1:]
+                # Show game over screen with received metrics
+                play_again = self.graphics.show_exit_screen(passed, final_time, path_length, damage)
+                # send play again message to submarine
+                snd_msg = np.array([play_again], dtype=bool)
+                self.send_sock.sendto(snd_msg.tobytes(), ("127.0.0.1", 40002))
+
+                # if not play again end the operator
+                if not play_again:
+                    raise RuntimeError('Game Over')
+                # if play again show the loading screen and wait for user input to start and reset submarine position
+                g.erase_screen()
+                g.show_loading_screen()
+                self.xs = np.array([320, 10], dtype=np.float64) 
+
+                run = True
+                while run:
+                    keyups, _, _= self.graphics.get_events()
+                    for key in keyups:
+                        if key== pygame.K_SPACE:
+                            run = False 
         except socket.timeout:
-            # TODO: why is it not triggering this 
             pygame.quit()
             raise RuntimeError("Connection lost")
 
