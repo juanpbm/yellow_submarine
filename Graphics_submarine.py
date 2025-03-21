@@ -46,6 +46,10 @@ class Graphics:
         self.cGreen = (0,255,0)
         self.cOrange = (255,100,0)
         self.cYellow = (255,255,0)
+        self.dGray = (50,50,50)
+        self.bGray = (230,230,230)
+        self.dBrown = (92, 64, 51)
+        self.Sand = (198, 166, 100)
         
         self.hhandle = pygame.image.load('imgs/hand.png') 
         
@@ -87,12 +91,8 @@ class Graphics:
 
         self.wall = pygame.Rect(0, 300, 185, 600)
         self.platform = pygame.Rect(600, 400, 800, 600)
-        self.table = pygame.Rect(630, 400, 800, 25)
+        self.table = pygame.Rect(630, 400, 800, 10)
         self.ground = pygame.Rect(185, 575, 415, 50)
-        self.dGray = (50,50,50)
-        self.bGray = (230,230,230)
-        self.dBrown = (92, 64, 51)
-        self.Sand = (198, 166, 100)
         
         self.show_linkages = True
         

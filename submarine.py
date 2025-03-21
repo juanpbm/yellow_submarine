@@ -31,16 +31,14 @@ class Submarine:
         
         self.fish_mode = 1
         
-        self.wall = pygame.Rect(0, 300, 185, 600)
-        self.platform = pygame.Rect(600, 400, 800, 600)
-        self.table = pygame.Rect(630, 400, 800, 25)
-        self.ground = pygame.Rect(185, 575, 415, 50)
-        self.dGray = (50,50,50)
-        self.bGray = (230,230,230)
-        self.dBrown = (92, 64, 51)
-        self.Sand = (198, 166, 100)
         self.xc = [300,200]
         #self.wall = pygame.Rect(xc, yc, 300, 300)
+
+        # Objects
+        self.object_grabbed = False
+        self.objects_in_target = []
+        self.object_mass = 0
+        self.grabbed_object = ""
 
         # Wait for at least one message from the master. Only continue once something is received.
         print("Waiting for operator communication")
@@ -148,6 +146,59 @@ class Submarine:
 
         return perturbation_force
     
+    def Grab_object(self, grab_object):
+        g = self.graphics
+        cursor=g.effort_cursor
+
+        if grab_object:
+            if not self.object_grabbed:
+                if (cursor.colliderect(g.anchor))  and (not cursor.colliderect(g.chest)) and ( not cursor.colliderect(g.bottle)) and "anchor" not in self.objects_in_target:
+                        g.anchor.topleft=(cursor.bottomleft[0]-24,cursor.bottomleft[1]-27)
+                        self.object_grabbed = True
+                        self.grabbed_object = "anchor"
+                        self.object_mass = 10.0
+                elif (cursor.colliderect(g.chest))  and  (not cursor.colliderect(g.anchor)) and ( not cursor.colliderect(g.bottle)) and "chest" not in self.objects_in_target:
+                        g.chest.topleft=(cursor.bottomleft[0]-24,cursor.bottomleft[1]-27)
+                        self.object_grabbed = True
+                        self.grabbed_object = "chest"
+                        self.object_mass = 5.0
+                elif (cursor.colliderect(g.bottle))  and  (not cursor.colliderect(g.chest)) and ( not cursor.colliderect(g.anchor)) and "bottle" not in self.objects_in_target:
+                        g.bottle.topleft=(cursor.bottomleft[0]-24,cursor.bottomleft[1]-27)
+                        self.object_grabbed = True
+                        self.grabbed_object = "bottle"
+                        self.object_mass = 1.0
+                elif not ((cursor.colliderect(g.chest)) or (cursor.colliderect(g.anchor)) or (cursor.colliderect(g.anchor))):
+                    self.object_grabbed = False
+                    self.grabbed_object = ""
+                    self.object_mass = 0.0
+            else:
+                if self.grabbed_object == "anchor":
+                    g.anchor.topleft = (cursor.bottomleft[0]-24, cursor.bottomleft[1]-27)
+                    if g.anchor.colliderect(g.table):
+                        print("delivered")
+                        self.objects_in_target.append("anchor")
+                        self.object_grabbed = False
+                        self.grabbed_object = ""
+                        self.object_mass = 0.0
+                elif self.grabbed_object == "chest":
+                    g.chest.topleft = (cursor.bottomleft[0]-24, cursor.bottomleft[1]-27)
+                    if g.chest.colliderect(g.table):
+                        self.objects_in_target.append("chest")
+                        self.object_grabbed = False
+                        self.grabbed_object = ""
+                        self.object_mass = 0.0
+                elif self.grabbed_object == "bottle":
+                    g.bottle.topleft = (cursor.bottomleft[0]-24, cursor.bottomleft[1]-27)
+                    if g.bottle.colliderect(g.table):
+                        self.objects_in_target.append("bottle")
+                        self.object_grabbed = False
+                        self.grabbed_object = ""
+                        self.object_mass = 0.0
+        else:
+            self.object_grabbed = False
+            self.grabbed_object = ""
+            self.object_mass = 0.0
+        
     def run(self):
         p = self.physics
         g = self.graphics
@@ -155,7 +206,6 @@ class Submarine:
         xs = np.array(g.submarine_pos)
         xh = np.array(g.haptic.center, dtype=np.float64) #make sure fe is a numpy array
         g.erase_screen()
-        cursor=g.effort_cursor
         
         # Receive and process messages
         try:
@@ -173,6 +223,9 @@ class Submarine:
             pygame.quit()
             raise RuntimeError("Connection lost")
         
+        # Grabbing Objects
+        self.Grab_object(grab_object)
+
         if self.render_haptics:
             dt = 0.01
 
@@ -214,10 +267,9 @@ class Submarine:
             f_damping = b_damping * v_h
             
             f_inertia = self.mass* a_h
-            if (cursor.colliderect(g.anchor)) and (grab_object):
-                g.anchor.topleft=(cursor.bottomleft[0]-24,cursor.bottomleft[1]-27)
-                fe+=np.array([0,-9.8*(0)])
-                fe+=f_inertia
+            if (self.object_grabbed):
+                fe += np.array([0,-9.8*(0)])
+                fe += self.object_mass * a_h
             fe = f_vspring + f_damping + fe + f_inertia
 
         # if the haptics are disabled send 0 force
@@ -262,10 +314,13 @@ class Submarine:
             self.path_length += np.linalg.norm(self.prev_xh - np.ceil(xh))
 
         # Check if game is over
-        print(time.time() - self.init_time, self.damage, (time.time() - self.init_time >= self.max_time or self.damage >= 100))
         if (time.time() - self.init_time >= self.max_time or self.damage >= 100):
             self.passed = False
             raise RuntimeError("Game Finished")
+        if len(self.objects_in_target) == 3:
+            self.passed = True
+            raise RuntimeError("Game Finished")
+
         
     def close(self):
         # Get Metrics 
@@ -288,12 +343,12 @@ class Submarine:
                 data = np.array(np.frombuffer(recv_data, dtype=bool))
                 play_again = data[0]
                 break
-            except:
+            except :
                 # add a 2min time-out to prevent an infinite loop.
                 if (time.time() - start_time > 60):
                     break
                 continue
-
+            
         # Close used resources
         self.graphics.close()
         self.physics.close()
@@ -323,6 +378,7 @@ if __name__=="__main__":
         try:
             while True:
                 submarine.run()
-        except:
-            play_again = submarine.close()
-            submarine = None
+        except RuntimeError as e:
+            if str(e) == "Game Finished":
+                play_again = submarine.close()
+                submarine = None

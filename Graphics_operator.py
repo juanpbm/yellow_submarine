@@ -263,15 +263,16 @@ class Graphics:
         continue_text_rect = continue_text.get_rect()
         continue_text_rect.center = (350, 400)
         self.window.blit(continue_text, continue_text_rect)
-
+    
         pygame.display.flip() 
+
         display = True
         play_again = False
         while display:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: #close window button was pressed
                     sys.exit(0) #raises a system exit exception so any Finally will actually execute
-                elif event.type == pygame.KEYUP:
+                elif event.type == pygame.KEYDOWN:
                     if  event.key == pygame.K_SPACE:
                         display = False
                         play_again = True

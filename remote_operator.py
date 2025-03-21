@@ -114,7 +114,7 @@ class RemoteOperator:
                 # TODO: Scale the feedback to make it stable
                 fe = np.array(rcv_msg[1:], dtype=np.float32)
             # if the first element is a 1 is a metrics and game over message
-            else:
+            elif (int(rcv_msg[0]) == 1 ):
                 passed, final_time, path_length, damage = rcv_msg[1:]
                 # Show game over screen with received metrics
                 play_again = self.graphics.show_exit_screen(passed, final_time, path_length, damage)
@@ -133,6 +133,7 @@ class RemoteOperator:
                 run = True
                 while run:
                     keyups, _, _= self.graphics.get_events()
+
                     for key in keyups:
                         if key== pygame.K_SPACE:
                             run = False 
