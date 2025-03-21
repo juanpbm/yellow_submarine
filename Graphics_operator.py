@@ -100,6 +100,7 @@ class Graphics:
         #########Process events  (Mouse, Keyboard etc...)#########
         events = pygame.event.get()
         keyups = []
+        keydowns = []
         keypress = []
         for event in events:
             if event.type == pygame.QUIT: #close window button was pressed
@@ -107,11 +108,13 @@ class Graphics:
                 sys.exit(0) #raises a system exit exception so any Finally will actually execute
             elif event.type == pygame.KEYUP:
                 keyups.append(event.key)
+            elif event.type == pygame.KEYDOWN:
+                keydowns.append(event.key)
 
         keypress = pygame.key.get_pressed()
         mouse_pos = pygame.mouse.get_pos()
         
-        return keyups, mouse_pos, keypress
+        return keyups, mouse_pos, keypress, keydowns
 
     def sim_forces(self,pE,f,pM,mouse_k=None,mouse_b=None):
         #simulated device calculations
@@ -269,16 +272,14 @@ class Graphics:
         display = True
         play_again = False
         while display:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT: #close window button was pressed
-                    sys.exit(0) #raises a system exit exception so any Finally will actually execute
-                elif event.type == pygame.KEYUP:
-                    if  event.key == pygame.K_SPACE:
-                        display = False
-                        play_again = True
-                    else:
-                        display = False
-                        play_again = False
+            _, _, _, keydowns= self.get_events()
+            for key in keydowns:
+                if key== pygame.K_SPACE:
+                    display = False
+                    play_again = True
+                else:
+                    display = False
+                    play_again = False
 
         return play_again
 

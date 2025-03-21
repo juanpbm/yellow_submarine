@@ -331,7 +331,7 @@ class Submarine:
         if (time.time() - self.init_time >= self.max_time or self.damage >= 100):
             self.passed = False
             raise RuntimeError("Game Finished")
-        if len(self.objects_in_target) == 3:
+        elif len(self.objects_in_target) == 1:
             self.passed = True
             raise RuntimeError("Game Finished")
 
@@ -356,14 +356,14 @@ class Submarine:
                 try:
                     recv_data, _ = self.recv_sock.recvfrom(1024)
                     data = np.array(np.frombuffer(recv_data, dtype=bool))
-                    play_again = data[0]
-                    break
+                    if(data[0] == 1):
+                        play_again = data[1]
+                        break
                 except :
                     # add a 2min time-out to prevent an infinite loop.
                     if (time.time() - start_time > 60):
                         break
                     continue
-                
         # Close used resources
         self.graphics.close()
         self.physics.close()
@@ -389,7 +389,6 @@ if __name__=="__main__":
             file.write(f"Participant Name: {name}, Haptic: {render_haptics}\n")
         
     while play_again:
-        print("Starting")
         submarine = Submarine(render_haptics)
         try:
             while True:
