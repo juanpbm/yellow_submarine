@@ -168,51 +168,38 @@ class Submarine:
                         self.grabbed_object = "bottle"
                         self.object_mass = 1.0
                 elif not ((cursor.colliderect(g.chest)) or (cursor.colliderect(g.anchor)) or (cursor.colliderect(g.anchor))):
-                    self.object_grabbed = False
-                    self.grabbed_object = ""
-                    self.object_mass = 0.0
-                    msg = np.array([2], dtype=np.float32)
-                    self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
-                    time.sleep(0.02)
+                    self.drop_object()
             else:
                 if self.grabbed_object == "anchor":
                     g.anchor.topleft = (cursor.bottomleft[0], cursor.bottomleft[1]-12)
                     if g.anchor.colliderect(g.table):
                         self.objects_in_target.append("anchor")
-                        self.object_grabbed = False
-                        self.grabbed_object = ""
-                        self.object_mass = 0.0
-                        msg = np.array([2], dtype=np.float32)
-                        self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
-                        time.sleep(0.02)
+                        self.drop_object()
 
                 elif self.grabbed_object == "chest":
                     g.chest.topleft = (cursor.bottomleft[0], cursor.bottomleft[1]-12)
                     if g.chest.colliderect(g.table):
                         self.objects_in_target.append("chest")
-                        self.object_grabbed = False
-                        self.grabbed_object = ""
-                        self.object_mass = 0.0
-                        msg = np.array([2], dtype=np.float32)
-                        self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
-                        time.sleep(0.02)
-
+                        self.drop_object()
 
                 elif self.grabbed_object == "bottle":
                     g.bottle.topleft = (cursor.bottomleft[0], cursor.bottomleft[1]-10)
                     if g.bottle.colliderect(g.table):
                         self.objects_in_target.append("bottle")
-                        self.object_grabbed = False
-                        self.grabbed_object = ""
-                        self.object_mass = 0.0
-                        msg = np.array([2], dtype=np.float32)
-                        self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
-                        time.sleep(0.02)
+                        self.drop_object()
         else:
             self.object_grabbed = False
             self.grabbed_object = ""
             self.object_mass = 0.0
-        
+
+    def drop_object(self):  
+        self.object_grabbed = False
+        self.grabbed_object = ""
+        self.object_mass = 0.0
+        msg = np.array([2], dtype=np.float32)
+        self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
+        time.sleep(0.02) 
+
     def run(self):
         p = self.physics
         g = self.graphics
@@ -280,9 +267,9 @@ class Submarine:
             a_h = ((v_h - self.prev_vh) / g.window_scale) / dt
             f_damping = b_damping * v_h
             
-            f_inertia = self.mass* a_h
+            f_inertia = self.mass * a_h
             if (self.object_grabbed):
-                fe += np.array([0,-9.8*(0)])
+                fe += np.array([0,-9.8 * (0)]) # TODO: what is this? 
                 fe += self.object_mass * a_h
             fe = f_vspring + f_damping + fe + f_inertia
 
