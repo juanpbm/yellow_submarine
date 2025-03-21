@@ -9,7 +9,7 @@ from Graphics_operator import Graphics
 
 class RemoteOperator:
     def __init__(self):
-        self.physics = Physics(hardware_version=3, connect_device=False) #setup physics class. Returns a boolean indicating if a device is connected
+        self.physics = Physics(hardware_version=3) #setup physics class. Returns a boolean indicating if a device is connected
         self.device_connected = self.physics.is_device_connected() #returns True if a connected haply device was found
         self.graphics = Graphics(self.device_connected) #setup class for drawing and graphics.
         
@@ -79,11 +79,11 @@ class RemoteOperator:
                 g.show_linkages = not g.show_linkages
             if key == ord('d'): #Change the visibility of the debug text
                 g.show_debug = not g.show_debug
-            if key == 32: # Space bar pressed
-                if (self.grab_object== 0):
-                    self.grab_object= 1
+            if key == pygame.K_SPACE: # Space bar pressed
+                if (self.grab_object == 0):
+                    self.grab_object = 1
                 else:
-                    self.grab_object= 0
+                    self.grab_object = 0
         if keypressed[pygame.K_LEFT]:
             self.xs[0] = np.clip(self.xs[0] - 1, 0, 800 - 150)
         if keypressed[pygame.K_RIGHT]:
@@ -103,7 +103,7 @@ class RemoteOperator:
                     while True:  # Keep reading until the buffer is empty
                         self.recv_sock.settimeout(0.01)
                         recv_data, _ = self.recv_sock.recvfrom(1024)
-                        last_message = recv_data  # Store the latest message
+                        last_message = recv_data  # Store the latest message                        
                 except socket.timeout:
                     self.recv_sock.settimeout(1)
                     break  # Exit loop when no more data is available
@@ -137,6 +137,9 @@ class RemoteOperator:
                     for key in keyups:
                         if key== pygame.K_SPACE:
                             run = False 
+            elif (int(rcv_msg[0]) == 2 ):
+                self.grab_object = 0
+
         except socket.timeout:
             pygame.quit()
             raise RuntimeError("Connection lost")

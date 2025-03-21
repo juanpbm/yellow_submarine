@@ -210,6 +210,7 @@ class Graphics:
         self.screenHaptics.blit(self.anchor_img, self.anchor)
         self.screenHaptics.blit(self.chest_img, self.chest)
         self.screenHaptics.blit(self.bottle_img, self.bottle)
+        pygame.draw.rect(self.screenHaptics, (255, 0, 0), self.anchor, 1)
 
         # Draw Fish
         self.screenHaptics.blit(self.fish_dir, self.fish_pos)

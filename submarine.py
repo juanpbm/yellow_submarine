@@ -153,17 +153,17 @@ class Submarine:
         if grab_object:
             if not self.object_grabbed:
                 if (cursor.colliderect(g.anchor))  and (not cursor.colliderect(g.chest)) and ( not cursor.colliderect(g.bottle)) and "anchor" not in self.objects_in_target:
-                        g.anchor.topleft=(cursor.bottomleft[0]-24,cursor.bottomleft[1]-27)
+                        g.anchor.topleft=(cursor.bottomleft[0],cursor.bottomleft[1]-12)
                         self.object_grabbed = True
                         self.grabbed_object = "anchor"
                         self.object_mass = 10.0
                 elif (cursor.colliderect(g.chest))  and  (not cursor.colliderect(g.anchor)) and ( not cursor.colliderect(g.bottle)) and "chest" not in self.objects_in_target:
-                        g.chest.topleft=(cursor.bottomleft[0]-24,cursor.bottomleft[1]-27)
+                        g.chest.topleft=(cursor.bottomleft[0],cursor.bottomleft[1]-12)
                         self.object_grabbed = True
                         self.grabbed_object = "chest"
                         self.object_mass = 5.0
                 elif (cursor.colliderect(g.bottle))  and  (not cursor.colliderect(g.chest)) and ( not cursor.colliderect(g.anchor)) and "bottle" not in self.objects_in_target:
-                        g.bottle.topleft=(cursor.bottomleft[0]-24,cursor.bottomleft[1]-27)
+                        g.bottle.topleft=(cursor.bottomleft[0],cursor.bottomleft[1]-10)
                         self.object_grabbed = True
                         self.grabbed_object = "bottle"
                         self.object_mass = 1.0
@@ -171,29 +171,43 @@ class Submarine:
                     self.object_grabbed = False
                     self.grabbed_object = ""
                     self.object_mass = 0.0
+                    msg = np.array([2], dtype=np.float32)
+                    self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
+                    time.sleep(0.02)
             else:
                 if self.grabbed_object == "anchor":
-                    g.anchor.topleft = (cursor.bottomleft[0]-24, cursor.bottomleft[1]-27)
+                    g.anchor.topleft = (cursor.bottomleft[0], cursor.bottomleft[1]-12)
                     if g.anchor.colliderect(g.table):
-                        print("delivered")
                         self.objects_in_target.append("anchor")
                         self.object_grabbed = False
                         self.grabbed_object = ""
                         self.object_mass = 0.0
+                        msg = np.array([2], dtype=np.float32)
+                        self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
+                        time.sleep(0.02)
+
                 elif self.grabbed_object == "chest":
-                    g.chest.topleft = (cursor.bottomleft[0]-24, cursor.bottomleft[1]-27)
+                    g.chest.topleft = (cursor.bottomleft[0], cursor.bottomleft[1]-12)
                     if g.chest.colliderect(g.table):
                         self.objects_in_target.append("chest")
                         self.object_grabbed = False
                         self.grabbed_object = ""
                         self.object_mass = 0.0
+                        msg = np.array([2], dtype=np.float32)
+                        self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
+                        time.sleep(0.02)
+
+
                 elif self.grabbed_object == "bottle":
-                    g.bottle.topleft = (cursor.bottomleft[0]-24, cursor.bottomleft[1]-27)
+                    g.bottle.topleft = (cursor.bottomleft[0], cursor.bottomleft[1]-10)
                     if g.bottle.colliderect(g.table):
                         self.objects_in_target.append("bottle")
                         self.object_grabbed = False
                         self.grabbed_object = ""
                         self.object_mass = 0.0
+                        msg = np.array([2], dtype=np.float32)
+                        self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
+                        time.sleep(0.02)
         else:
             self.object_grabbed = False
             self.grabbed_object = ""
@@ -322,33 +336,34 @@ class Submarine:
             raise RuntimeError("Game Finished")
 
         
-    def close(self):
-        # Get Metrics 
-        final_time = time.time() - self.init_time
-        results = np.array([1, self.passed, final_time, self.path_length, self.damage], dtype=np.float32)
-        # Send metrics the first element is 1, the type of the message informing the operator that it is a metrics message
-        self.send_sock.sendto(results.tobytes(), ("127.0.0.1", 40001))
-        # print metrics to make sure they were recieved correctly
-        print(f"Passed: {self.passed}, Time: {final_time:.2f}, Path_length: {self.path_length:.2f}, damage: {self.damage:.0f}")
-        # save results to file 
-        with open("results.txt", "a") as file:
-            file.write(f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}, Passed: {self.passed}, Time: {final_time:.2f}, Path_length: {self.path_length:.2f}, Damage: {self.damage:.0f} \n")
-        
-        # Wait for message from the operator to play again or not
-        start_time = time.time()
+    def close(self, show_exit_screen):
+        # Get Metrics
         play_again = False
-        while True:
-            try:
-                recv_data, _ = self.recv_sock.recvfrom(1024)
-                data = np.array(np.frombuffer(recv_data, dtype=bool))
-                play_again = data[0]
-                break
-            except :
-                # add a 2min time-out to prevent an infinite loop.
-                if (time.time() - start_time > 60):
-                    break
-                continue
+        if show_exit_screen: 
+            final_time = time.time() - self.init_time
+            results = np.array([1, self.passed, final_time, self.path_length, self.damage], dtype=np.float32)
+            # Send metrics the first element is 1, the type of the message informing the operator that it is a metrics message
+            self.send_sock.sendto(results.tobytes(), ("127.0.0.1", 40001))
+            # print metrics to make sure they were recieved correctly
+            print(f"Passed: {self.passed}, Time: {final_time:.2f}, Path_length: {self.path_length:.2f}, damage: {self.damage:.0f}")
+            # save results to file 
+            with open("results.txt", "a") as file:
+                file.write(f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}, Passed: {self.passed}, Time: {final_time:.2f}, Path_length: {self.path_length:.2f}, Damage: {self.damage:.0f} \n")
             
+            # Wait for message from the operator to play again or not
+            start_time = time.time()
+            while True:
+                try:
+                    recv_data, _ = self.recv_sock.recvfrom(1024)
+                    data = np.array(np.frombuffer(recv_data, dtype=bool))
+                    play_again = data[0]
+                    break
+                except :
+                    # add a 2min time-out to prevent an infinite loop.
+                    if (time.time() - start_time > 60):
+                        break
+                    continue
+                
         # Close used resources
         self.graphics.close()
         self.physics.close()
@@ -374,11 +389,17 @@ if __name__=="__main__":
             file.write(f"Participant Name: {name}, Haptic: {render_haptics}\n")
         
     while play_again:
+        print("Starting")
         submarine = Submarine(render_haptics)
         try:
             while True:
                 submarine.run()
         except RuntimeError as e:
             if str(e) == "Game Finished":
-                play_again = submarine.close()
+                play_again = submarine.close(True)
                 submarine = None
+                continue
+
+        play_again = submarine.close(False)
+        submarine = None
+
