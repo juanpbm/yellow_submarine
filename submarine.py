@@ -331,7 +331,7 @@ class Submarine:
         if (time.time() - self.init_time >= self.max_time or self.damage >= 100):
             self.passed = False
             raise RuntimeError("Game Finished")
-        elif len(self.objects_in_target) == 1:
+        elif len(self.objects_in_target) == 3:
             self.passed = True
             raise RuntimeError("Game Finished")
 
