@@ -267,9 +267,9 @@ class Submarine:
             a_h = ((v_h - self.prev_vh) / g.window_scale) / dt
             f_damping = b_damping * v_h
             
-            f_inertia = self.mass * a_h
+            f_inertia = self.mass* a_h
             if (self.object_grabbed):
-                fe += np.array([0,-9.8 * (0)]) # TODO: what is this? 
+                fe += np.array([0,-9.8*(0)])
                 fe += self.object_mass * a_h
             fe = f_vspring + f_damping + fe + f_inertia
 
