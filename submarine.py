@@ -307,13 +307,10 @@ class Submarine:
             if ((xh[0]+ 20)-g.platform.topleft[0]) > ((xh[1]+25)-g.platform.topleft[1]):
                 self.collision_platform=1
             else:
-                self.collision_platform=2  
-
-            print("Change collision")      
+                self.collision_platform=2    
 
         if (((xh[1]+25)<(g.platform.topleft[1])) or (xh[0] + 20)<(g.platform.topleft[0])) and (self.collision_platform!=0):
             self.collision_platform=0
-            print("collision_platform no longer detected")
 
         elif(self.collision_platform==1):
             xh[1]=g.platform.topleft[1]-25
@@ -321,7 +318,6 @@ class Submarine:
         elif(self.collision_platform==2):
             xh[0]=g.platform.topleft[0]-20
 
-        print(self.collision_platform)
         #Check collision with wall on the left and limit the handle position accordingly
 
         if ((xh[0] - 20)<g.wall.topright[0]) and ((xh[1]+25)>g.wall.topright[1]) and self.collision_wall==0:
