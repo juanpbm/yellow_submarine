@@ -40,6 +40,7 @@ class Submarine:
         self.object_mass = 0
         self.grabbed_object = ""
 
+        self.collision= 0
         # Wait for at least one message from the master. Only continue once something is received.
         print("Waiting for operator communication")
         i = 0
@@ -296,6 +297,51 @@ class Submarine:
         pB = (pB[0] / 4, pB[1] / 4)
         pE = (pE[0] / 2, pE[1])
         pA0, pB0, pA, pB, xh = g.convert_pos(pA0, pB0, pA, pB, pE)
+
+
+        #Check collision with platform on the right and limit the handle position accordingly
+
+        if ((xh[0]+ 20)>g.platform.topleft[0]) and ((xh[1]+25)>g.platform.topleft[1]) and self.collision==0:
+
+            if ((xh[0]-g.platform.topleft[0]) > (xh[1]-g.platform.topleft[1])):
+                self.collision=1
+            else:
+                self.collision=2        
+
+        if (((xh[1]+25)<(g.platform.topleft[1])) or (xh[0] + 20)<(g.platform.topleft[0])) and (self.collision!=0):
+            self.collision=0
+
+        elif(self.collision==1):
+            xh[1]=g.platform.topleft[1]-25
+
+        elif(self.collision==2):
+            xh[0]=g.platform.topleft[0]-20
+
+
+        #Check collision with wall on the left and limit the handle position accordingly
+
+        if ((xh[0] - 20)<g.wall.topright[0]) and ((xh[1]+25)>g.wall.topright[1]) and self.collision==0:
+
+            if ( - (xh[0]-g.wall.topright[0]) > (xh[1]-g.wall.topright[1])):
+                self.collision=1
+            else:
+                self.collision=2        
+
+        if (((xh[1]+25)<(g.wall.topright[1])) or (xh[0] - 20)>(g.wall.topright[0])) and (self.collision!=0):
+            self.collision=0
+
+        elif(self.collision==1):
+            xh[1]=g.wall.topright[1]-25
+
+        elif(self.collision==2):
+            xh[0]=g.wall.topright[0] + 20
+
+        
+
+
+
+        # msg = np.array([0, *fe], dtype=np.float32)
+        # self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
         g.render(pA0, pB0, pA, pB, xh, fe, xm, xs, self.init_time, self.damage)  # Render environment
 
         if self.fish_pos[0] >= 550 and self.fish_dir == self.fish_right:

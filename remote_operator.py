@@ -52,7 +52,7 @@ class RemoteOperator:
         p = self.physics #assign these to shorthand variables for easier use in this function
         g = self.graphics
         #get input events for both keyboard and mouse
-        keyups, xm, keypressed, _ = g.get_events()
+        keyups, xm, keypressed, mouse_pressed = g.get_events()
         #  - keyups: list of unicode numbers for keys on the keyboard that were released this cycle
         #  - pm: coordinates of the mouse on the graphics screen this cycle (x,y)      
         #get the state of the device, or otherwise simulate it if no device is connected (using the mouse position)
@@ -84,6 +84,7 @@ class RemoteOperator:
                     self.grab_object = 1
                 else:
                     self.grab_object = 0
+
         if keypressed[pygame.K_LEFT]:
             self.xs[0] = np.clip(self.xs[0] - 1, 0, 800 - 150)
         if keypressed[pygame.K_RIGHT]:
