@@ -64,7 +64,7 @@ class Graphics:
         self.colorHaptic = self.cOrange ##color of the wall
 
         # Make submarine
-        # im age taken from https://www.cleanpng.com/png-yellow-submarine-clip-art-submarine-biomass-vector-1902493/
+        # image taken from https://www.cleanpng.com/png-yellow-submarine-clip-art-submarine-biomass-vector-1902493/
         self.submarine_left = pygame.transform.scale(pygame.image.load('imgs/yellow_submarine_left.png'), (150, 100))
         self.submarine_right = pygame.transform.scale(pygame.image.load('imgs/yellow_submarine_right.png'), (150, 100))
         self.submarine_dir = self.submarine_left
@@ -86,20 +86,15 @@ class Graphics:
         self.chest = self.chest_img.get_rect(topleft=(50, 255))
         self.bottle = self.bottle_img.get_rect(topleft=(200, 542))
 
-        # Obstacles
-        self.fish_mode = 1
-        self.fish_left = pygame.transform.scale(pygame.image.load('imgs/fish_left.png'), (40, 20))
-        self.fish_right = pygame.transform.scale(pygame.image.load('imgs/fish_right.png'), (40, 20))
-        self.fish_dir = self.fish_right
-        self.fish_pos = np.array([200,400])
-
+        # Background elements
         self.wall = pygame.Rect(0, 300, 185, 600)
         self.platform = pygame.Rect(600, 400, 800, 600)
-        self.table = pygame.Rect(630, 400, 800, 10)
+        self.table = pygame.Rect(630, 400, 800, 25)
         self.ground = pygame.Rect(185, 575, 415, 50)
-        
+
         self.show_linkages = True
         
+        # Currents
         self.current_pos = np.array([0,1200])
         self.current = pygame.transform.scale(pygame.image.load('imgs/current_line.png'), (800, 120))
         self.current_rect = self.current.get_rect(topleft=self.current_pos)
@@ -120,18 +115,12 @@ class Graphics:
         
         self.fish_rect = np.array([fish1, fish2, fish3])
         
-        
         if(num_fish >= 1):
             self.fish[0] = 1
         if(num_fish >= 2):
             self.fish[1] = 1
         if(num_fish >= 3):
             self.fish[2] = 1
-            
-        self.wall = pygame.Rect(0, 300, 185, 600)
-        self.platform = pygame.Rect(600, 400, 800, 600)
-        self.table = pygame.Rect(630, 400, 800, 25)
-        self.ground = pygame.Rect(185, 575, 415, 50)
 
     def convert_pos(self,*positions):
         #invert x because of screen axes
@@ -304,7 +293,6 @@ class Graphics:
 
         ##Fuse it back together
         self.window.blit(self.screenHaptics, (0,0))
-
 
         pygame.display.flip()    
         ##Slow down the loop to match FPS

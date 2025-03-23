@@ -27,25 +27,27 @@ class EndGame(Exception):
 class Submarine:
     def __init__(self, render_haptics = True):
         self.max_time = 2 * 60 # "T_minutes" * 60s = T_seconds 
-        self.physics = Physics(hardware_version=0, connect_device=False)  # Setup physics class
-#setup physics class. Returns a boolean indicating if a device is connected
+        self.physics = Physics(hardware_version=0, connect_device=False) #setup physics class. Returns a boolean indicating if a device is connected
         self.graphics = Graphics(False, num_fish=2, max_time=self.max_time) #setup class for drawing and graphics.
         self.render_haptics = render_haptics
+
         # Set up UDP sockets
         self.send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock.bind(("127.0.0.1", 40002))
         self.recv_sock.setblocking(False)
         
+        # TODO: what is this? 
         self.pAl = [0,0]
         self.pBl = [0,0]
         self.pEl = [0,0]
         
         self.collision_act = 0
         
+        # Current
         self.current_on = False
-        #self.wall = pygame.Rect(xc, yc, 300, 300)
         
+        # Fish
         self.fish_left = pygame.transform.scale(pygame.image.load('imgs/fish_left.png'), (40, 20))
         self.fish_right = pygame.transform.scale(pygame.image.load('imgs/fish_right.png'), (40, 20))
         self.fish_dir = self.fish_right
@@ -54,9 +56,8 @@ class Submarine:
         self.fish_mode = 1
         
         self.xc = self.graphics.haptic.center
-        #self.wall = pygame.Rect(xc, yc, 300, 300)
 
-        # Objects
+        # Objects interaction
         self.object_grabbed = False
         self.objects_in_target = []
         self.object_mass = 0
@@ -67,36 +68,8 @@ class Submarine:
         self.collision_anchor = 0
         self.collision_chest = 0
         self.collision_bottle= 0
-        # Wait for at least one message from the master. Only continue once something is received.
-        print("Waiting for operator communication")
-        i = 0
-        while True:
-            for event in pygame.event.get():  # Handle events to keep the window responsive
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit(0)
-            try: 
-                self.send_sock.sendto(np.array([0,0,0], dtype=np.float32).tobytes(), ("127.0.0.1", 40001))
-                _ = self.recv_sock.recvfrom(1024)
-                # Set a timeout to allow closing the window automatically when the communication is broken
-                self.recv_sock.settimeout(1)
-                print("Connected")
-                break
-            except BlockingIOError:
-                self.graphics.show_loading_screen(i)
-                i += 1
-                pass
-        
-        self.wall = pygame.Rect(0, 300, 185, 600)
-        self.platform = pygame.Rect(600, 400, 800, 600)
-        self.table = pygame.Rect(630, 400, 800, 25)
-        self.ground = pygame.Rect(185, 575, 415, 50)
-        self.dGray = (50,50,50)
-        self.bGray = (230,230,230)
-        self.dBrown = (92, 64, 51)
-        self.Sand = (198, 166, 100)
-        
 
+        # TODO: what is this
         self.mass=0.5
         self.haptic_width = 48
         self.haptic_height = 48
@@ -108,7 +81,6 @@ class Submarine:
         self.gravity = 9.81  
         self.drag_coefficient = 1
 
-    
         self.cross_sectional_area = (self.haptic_width / self.graphics.window_scale) * (
             self.haptic_height / self.graphics.window_scale
         )  
@@ -128,8 +100,7 @@ class Submarine:
 
         self.k_fish = 50 
 
-        #self.wall = pygame.Rect(xc, yc, 300, 300)
-
+        
         # Wait for at least one message from the master. Only continue once something is received.
         print("Waiting for operator communication")
         i = 0
@@ -264,6 +235,60 @@ class Submarine:
         self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
         time.sleep(0.02) 
 
+    def calc_forces(self, xh):
+        g = self.graphics
+
+        if self.render_haptics:
+            dt = 0.01
+
+            if not hasattr(self, "prev_xh"):
+                self.prev_xh = xh.copy()
+
+            if random.random() < 0.1 and self.current_on == False:
+                self.perturbations.append(self.generate_perturbation())
+            # TODO: wave seems to not be working
+            f_wave = self.get_perturbation_force(xh,g)
+            f_perturbation = -(self.mass * self.gravity - self.water_density * self.displaced_volume * self.gravity)
+            f_perturbation = np.array([0, f_perturbation]) + f_wave
+
+            fe = np.array([0, 0], dtype=np.float32)
+            fe += f_perturbation 
+            
+            haptic_rect = pygame.Rect(xh[0], xh[1], self.haptic_width, self.haptic_height)
+            # TODO: FIX FORCE FISH
+            if self.collision_act>0:
+                penetration_depth = max(0, self.collision_act + 40 - haptic_rect.left)
+                fe[0] += (self.k_fish * penetration_depth/600)
+                
+            v_h = ((xh - self.prev_xh) / g.window_scale) / dt
+            self.b_water = 0.5
+            f_hydro = np.array(-self.b_water * v_h)
+            fe += f_hydro
+            
+            k_spring = 150
+            b_damping = 2
+            dt = 0.01
+
+            f_vspring = k_spring * (xh-g.xc) / g.window_scale
+            if not hasattr(self, "prev_vh"):
+                self.prev_vh = v_h.copy()
+            v_h = ((xh - self.prev_xh) / g.window_scale) / dt
+
+            a_h = ((v_h - self.prev_vh) / g.window_scale) / dt
+            f_damping = b_damping * v_h
+
+            f_inertia = self.mass* a_h
+            if (self.object_grabbed):
+                fe += np.array([0,-9.8*(0)])
+                fe += self.object_mass * a_h
+            fe = f_vspring + f_damping + fe + f_inertia
+
+        # if the haptics are disabled send 0 force
+        else: 
+            fe = np.array([0,0], dtype=np.float32)
+
+        return fe, v_h
+
     def run(self):
         p = self.physics
         g = self.graphics
@@ -296,56 +321,7 @@ class Submarine:
         # Grabbing Objects
         self.Grab_object(grab_object)
 
-        if self.render_haptics:
-            dt = 0.01
-
-            if not hasattr(self, "prev_xh"):
-                self.prev_xh = xh.copy()
-
-            if random.random() < 0.1 and self.current_on == False:
-                self.perturbations.append(self.generate_perturbation())
-                
-
-            f_wave = self.get_perturbation_force(xh,g)
-            f_perturbation = -(self.mass * self.gravity - self.water_density * self.displaced_volume * self.gravity)
-            f_perturbation = np.array([0, f_perturbation]) + f_wave
-
-            fe = np.array([0, 0], dtype=np.float32)
-            fe += f_perturbation 
-            
-            haptic_rect = pygame.Rect(xh[0], xh[1], self.haptic_width, self.haptic_height)
-            # TODO: FEX FORCE FISH
-            if self.collision_act>0:
-                penetration_depth = max(0, self.collision_act + 40 - haptic_rect.left)
-                fe[0] += (self.k_fish * penetration_depth/600)
-                
-            v_h = ((xh - self.prev_xh) / g.window_scale) / dt
-            self.b_water = 0.5
-            f_hydro = np.array(-self.b_water * v_h)
-            fe += f_hydro
-            
-            k_spring = 150
-            b_damping = 2
-            dt = 0.01
-
-            f_vspring = k_spring * (xh-g.xc) / g.window_scale
-            if not hasattr(self, "prev_vh"):
-                self.prev_vh = v_h.copy()
-            v_h = ((xh - self.prev_xh) / g.window_scale) / dt
-
-            a_h = ((v_h - self.prev_vh) / g.window_scale) / dt
-            f_damping = b_damping * v_h
-
-            f_inertia = self.mass* a_h
-            if (self.object_grabbed):
-                fe += np.array([0,-9.8*(0)])
-                fe += self.object_mass * a_h
-            fe = f_vspring + f_damping + fe + f_inertia
-
-        # if the haptics are disabled send 0 force
-        else: 
-            fe = np.array([0,0], dtype=np.float32)
-        
+        fe, v_h = self.calc_forces(xh)
 
         # Send force the first 0 is the type of the message informing the operator that it is a force
         msg = np.array([0, *fe], dtype=np.float32)
@@ -358,23 +334,20 @@ class Submarine:
         
         g.render_fish()
 
-        # Check collision with fish
+        # Check collision with fish TODO: some collisions are weird
         for n, f in enumerate(g.fish):
             if f == 1:              
                 # Check distance from fish to each line
                 if (g.effort_cursor.colliderect(g.fish_rect[n]) or 
                     (xh[1] >= g.fish_pos[n][1] and (np.abs(g.fish_pos[n][0] - xh[0])<50))):
                     self.collision_act = g.fish_pos[n][0]
-                    self.damage += 1.0
+                    self.damage += 1.0 #  TODO: too much damage
+                    # TODO: drop object if collision
                 
-
-                    
-
         # Ensure haptic device stays within the window bounds
         xh[0] = np.clip(xh[0], 0, g.window_size[0] - self.haptic_width)
         xh[1] = np.clip(xh[1], 0, g.window_size[1] - self.haptic_height)
         
-
         pos_phys = g.inv_convert_pos(xh)
         pA0,pB0,pA,pB,pE = p.derive_device_pos(pos_phys) #derive the pantograph joint positions given some endpoint position
 
@@ -386,40 +359,29 @@ class Submarine:
 
         pA0, pB0, pA, pB, xh = g.convert_pos(pA0, pB0, pA, pB, pE)
 
-
         #Check collision with platform on the right and limit the handle position accordingly
-
         if ((xh[0]+ 20)>g.platform.topleft[0]) and ((xh[1]+25)>g.platform.topleft[1]) and (self.collision_platform==0):
-
             if ((xh[0]+ 20)-g.platform.topleft[0]) > ((xh[1]+25)-g.platform.topleft[1]):
                 self.collision_platform=1
             else:
                 self.collision_platform=2    
-
         elif (((xh[1]+25)<(g.platform.topleft[1])) or (xh[0] + 20)<(g.platform.topleft[0])) and (self.collision_platform!=0):
             self.collision_platform=0
-
         elif(self.collision_platform==1):
             xh[1]=g.platform.topleft[1]-25
-
         elif(self.collision_platform==2):
             xh[0]=g.platform.topleft[0]-20
 
         #Check collision with wall on the left and limit the handle position accordingly
-
         if ((xh[0] - 20)<g.wall.topright[0]) and ((xh[1]+25)>g.wall.topright[1]) and self.collision_wall==0:
-
             if ( - ((xh[0] - 20)-g.wall.topright[0]) > ((xh[1]+25)-g.wall.topright[1])):
                 self.collision_wall=1
             else:
                 self.collision_wall=2        
-
         elif (((xh[1]+25)<(g.wall.topright[1])) or (xh[0] - 20)>(g.wall.topright[0])) and (self.collision_wall!=0):
             self.collision_wall=0
-
         elif(self.collision_wall==1):
             xh[1]=g.wall.topright[1]-25
-
         elif(self.collision_wall==2):
             xh[0]=g.wall.topright[0] + 20
 
@@ -446,7 +408,6 @@ class Submarine:
             self.passed = True
             raise EndGame("Game Finished", 0)
 
-        
     def close(self, show_exit_screen):
         # Get Metrics
         play_again = False
@@ -476,6 +437,7 @@ class Submarine:
                     if (time.time() - start_time > 60):
                         break
                     continue
+
         # Close used resources
         self.graphics.close()
         self.physics.close()
@@ -484,36 +446,30 @@ class Submarine:
         return play_again
     
     def collision_object(self,xh, object, collision_specific_object, offset=0 ):
-        
+        #TODO: add damage for colliding with walls, drop object.
         # Check if the limits of the handle respect to xh collision with the object
         if (((xh[0]+ 20)>object.topleft[0]) and ((xh[0]- 20)<object.topright[0]) ) and ((xh[1]+12 + offset)>object.topleft[1]) and (collision_specific_object==0):
-
                 # Check if the collision is from top, left or right
                 if (((xh[0]+ 20)-object.topleft[0]) > ((xh[1]+12 - offset)-object.topleft[1])):
                     # This condition only happens when xh is further away from left side than the top, meaning that when there was a collision was from the top or right side
                     if ( -((xh[0]- 20)-object.topright[0]))  > ((xh[1]+12 + offset)-object.topleft[1]):
                          # Collision from top
                         collision_specific_object=1
-
                     else:
                         # Collision from right side
                         collision_specific_object=3
                 else:
                     # This condition only happens when xh is further away from top than the left side, meaning that when there was a collision was from the left side
                     collision_specific_object=2  
-
         # Check if the handle no longer collides with the object
         elif ( ((xh[1]+12 + offset)<(object.topleft[1])) or ((xh[0] + 20)<(object.topleft[0])) or ((xh[0] - 20)>(object.topright[0]))) and (collision_specific_object!=0) :
             # No collision (default)
             collision_specific_object=0
-
         # Adjust the handle accordingly
         elif(collision_specific_object==1):
             xh[1]=object.topleft[1]-12 - offset
-
         elif(collision_specific_object==2):
             xh[0]=object.topleft[0]-20
-
         elif(collision_specific_object==3):
             xh[0]=object.topright[0] + 20
 
@@ -551,6 +507,3 @@ if __name__=="__main__":
             print("Unhandled exception occurred:")
             traceback.print_exc()
             break
-
-            
-    
