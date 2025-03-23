@@ -6,6 +6,7 @@ import socket
 
 from Physics import Physics
 from Graphics_operator import Graphics
+from submarine import EndGame
 
 class RemoteOperator:
     def __init__(self):
@@ -137,7 +138,7 @@ class RemoteOperator:
 
                 # if not play again end the operator
                 if not play_again:
-                    raise RuntimeError('Game Over')
+                    raise EndGame("Game Over", 2)
                 # if play again show the loading screen and wait for user input to start and reset submarine position
                 g.erase_screen()
                 g.show_loading_screen()
@@ -151,11 +152,13 @@ class RemoteOperator:
                             run = False 
         except socket.timeout:
             pygame.quit()
-            raise RuntimeError("Connection lost")
+            raise EndGame("Connection lost", 1)
 
-        fe*=0.5
+        
         # Update previous position
         self.prev_xh = xh.copy()
+        fe*=0.5
+
         ##############################################
         if self.device_connected: #set forces only if the device is connected
             p.update_force(fe)
@@ -177,5 +180,8 @@ if __name__=="__main__":
     try:
         while True:
             operator.run()
+    except EndGame as e:
+        print(f"Game stopped with exception: {e}")
+
     finally:
         operator.close()

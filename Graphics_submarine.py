@@ -6,7 +6,7 @@ import os
 import time 
 
 class Graphics:
-    def __init__(self,device_connected,window_size=(800,600), max_time=1.0):
+    def __init__(self,device_connected,num_fish=0,window_size=(800,600), max_time=1.0):
         self.device_connected = device_connected
         self.max_time = max_time
         #initialize pygame window
@@ -17,8 +17,8 @@ class Graphics:
         pygame.display.set_caption('Yellow Submarine')
 
         self.screenHaptics = pygame.Surface(self.window_size)
-        xc = self.screenHaptics.get_rect().centerx
-        yc =self.screenHaptics.get_rect().centery
+        self.xc = self.screenHaptics.get_rect().centerx
+        self.yc =self.screenHaptics.get_rect().centery
         ##add nice icon from https://www.flaticon.com/authors/vectors-market
         self.icon = pygame.image.load('imgs/yellow_submarine_left.png')
         pygame.display.set_icon(self.icon)
@@ -56,7 +56,7 @@ class Graphics:
         self.colorHaptic = self.cOrange ##color of the wall
 
         # Make submarine
-        # image taken from https://www.cleanpng.com/png-yellow-submarine-clip-art-submarine-biomass-vector-1902493/
+        # im age taken from https://www.cleanpng.com/png-yellow-submarine-clip-art-submarine-biomass-vector-1902493/
         self.submarine_left = pygame.transform.scale(pygame.image.load('imgs/yellow_submarine_left.png'), (150, 100))
         self.submarine_right = pygame.transform.scale(pygame.image.load('imgs/yellow_submarine_right.png'), (150, 100))
         self.submarine_dir = self.submarine_left
@@ -91,6 +91,44 @@ class Graphics:
         
         self.show_linkages = True
         
+        self.current_pos = np.array([0,1200])
+        self.current = pygame.transform.scale(pygame.image.load('imgs/current_line.png'), (800, 120))
+        self.current_rect = self.current.get_rect(topleft=self.current_pos)
+        
+        # Fish
+        self.fish_left = pygame.transform.scale(pygame.image.load('imgs/fish_left.png'), (40, 20))
+        self.fish_right = pygame.transform.scale(pygame.image.load('imgs/fish_right.png'), (40, 20))
+
+        self.fish = [0,0,0]
+
+        self.fish_dir = np.array([self.fish_right, self.fish_left, self.fish_right])
+        self.fish_pos = [[200,500],[500,400],[400,550]]
+        self.fish_mode = np.array([1,-1, 1])
+        
+        fish1 =self.fish_dir[0].get_rect(topleft=self.fish_pos[0])
+        fish2 =self.fish_dir[1].get_rect(topleft=self.fish_pos[1]) 
+        fish3 =self.fish_dir[2].get_rect(topleft=self.fish_pos[2]) 
+        
+        self.fish_rect = np.array([fish1, fish2, fish3])
+        
+        
+        if(num_fish >= 1):
+            self.fish[0] = 1
+        if(num_fish >= 2):
+            self.fish[1] = 1
+        if(num_fish >= 3):
+            self.fish[2] = 1
+            
+        self.wall = pygame.Rect(0, 300, 185, 600)
+        self.platform = pygame.Rect(600, 400, 800, 600)
+        self.table = pygame.Rect(630, 400, 800, 25)
+        self.ground = pygame.Rect(185, 575, 415, 50)
+        self.dGray = (50,50,50)
+        self.bGray = (230,230,230)
+        self.dBrown = (92, 64, 51)
+        self.Sand = (198, 166, 100)
+
+
     def convert_pos(self,*positions):
         #invert x because of screen axes
         # 0---> +X
@@ -198,14 +236,15 @@ class Graphics:
     def render(self,pA0,pB0,pA,pB,pE,f,pM, pS, st, dam  ):
         ###################Render the Haptic Surface###################
         #set new position of items indicating the endpoint location
+        self.screenHaptics.blit(self.current, self.current_pos)
+        
         self.haptic.center = pE #the hhandle image and effort square will also use this position for drawing
         self.effort_cursor.center = self.haptic.center
 
         # Draw Object
         pygame.draw.rect(self.screenHaptics, "red", self.object)
 
-        # Draw Fish
-        self.screenHaptics.blit(self.fish_dir, self.fish_pos)
+        # Draw Background elements
         pygame.draw.rect(self.screenHaptics,self.dBrown,self.wall)
         pygame.draw.rect(self.screenHaptics,self.dGray,self.platform)
         pygame.draw.rect(self.screenHaptics,self.bGray,self.table)
@@ -236,14 +275,6 @@ class Graphics:
         self.device_origin = (pS[0] + 75, pS[1] + 90)
         self.screenHaptics.blit(self.submarine_dir, self.submarine_pos)
 
-        if(self.fish_pos[0] >= 550 and self.fish_dir == self.fish_right):
-            self.fish_mode = -1
-            self.fish_dir = self.fish_left
-        if(self.fish_pos[0] <=200 and self.fish_dir == self.fish_left):
-            self.fish_mode = 1
-            self.fish_dir = self.fish_right
-            
-        self.fish_pos[0] += self.fish_mode
 
         # Display time
         remaining_time = max(0, self.max_time - (time.time() - st))
@@ -268,6 +299,7 @@ class Graphics:
         ##Fuse it back together
         self.window.blit(self.screenHaptics, (0,0))
 
+
         pygame.display.flip()    
         ##Slow down the loop to match FPS
         self.clock.tick(self.FPS)
@@ -283,11 +315,32 @@ class Graphics:
             init_text_rect = init_text.get_rect()
             init_text_rect.topleft = (50, 300)
             self.window.blit(init_text, init_text_rect)
-            pygame.display.flip()  
-            
-            
+            pygame.display.flip()
         return 0
 
+    # FISH
+    def render_fish(self):
+        
+        for n, f in enumerate(self.fish):
+            if(f == 1):
+                self.screenHaptics.blit(self.fish_dir[n], self.fish_pos[n])
+                
+                
+                if self.fish_pos[n][0] >= 550 and self.fish_mode[n] == 1:
+                    self.fish_mode[n] = -1
+                    self.fish_dir[n] = self.fish_left
+                elif self.fish_pos[n][0] <= 200 and self.fish_mode[n] == -1:
+                    self.fish_mode[n] = 1
+                    self.fish_dir[n] = self.fish_right
+                    
+                self.fish_pos[n][0] += self.fish_mode[n]
+                pos_new = [0,0]
+                pos_new[0] = self.fish_pos[n][0] 
+                pos_new[1] = self.fish_pos[n][1]
+
+                fish_new =self.fish_dir[n].get_rect(topleft=pos_new) 
+                
+                self.fish_rect[n] = fish_new
 
     def close(self):
         pygame.display.quit()
