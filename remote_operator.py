@@ -3,9 +3,11 @@ import sys
 import numpy as np
 import pygame
 import socket
+import traceback
 
 from Physics import Physics
 from Graphics_operator import Graphics
+from submarine import EndGame
 
 class RemoteOperator:
     def __init__(self):
@@ -59,6 +61,7 @@ class RemoteOperator:
         if self.device_connected:
             pA0,pB0,pA,pB,pE = p.get_device_pos() #positions of the various points of the pantograph
             pA0,pB0,pA,pB,xh = g.convert_pos(pA0,pB0,pA,pB,pE) #convert the physical positions to screen coordinates
+            print(xh)
         else:
             xh = g.haptic.center
             #set xh to the current haptic position, which is from the last frame.
@@ -92,7 +95,18 @@ class RemoteOperator:
 
         # Send Position from the haptic device or mouse and the submarine position
         # Send Position from the haptic device or mouse and the submarine position
-        message = np.array([xh, self.xs,(self.grab_object,0)])
+# Scale xh between -1 and 1
+        xh_scaled = np.array([
+            2 * (xh[0] / 600) - 1,  # Scale xh[0] from 0-700 to -1 to 1
+            2 * (xh[1] / 400) - 1,  # Scale xh[1] from 0-500 to -1 to 1
+        ])
+
+        # Create the message array
+        message = np.array([xh_scaled, self.xs, (self.grab_object, 0)])
+
+     
+
+        # Send the message
         self.send_sock.sendto(message.tobytes(), ("127.0.0.1", 40002))
 
         # Receive Force feedback
@@ -125,7 +139,7 @@ class RemoteOperator:
 
                 # if not play again end the operator
                 if not play_again:
-                    raise RuntimeError('Game Over')
+                    raise EndGame("Game Over", 2)
                 # if play again show the loading screen and wait for user input to start and reset submarine position
                 g.erase_screen()
                 g.show_loading_screen()
@@ -142,11 +156,13 @@ class RemoteOperator:
 
         except socket.timeout:
             pygame.quit()
-            raise RuntimeError("Connection lost")
+            raise EndGame("Connection lost", 1)
 
         
         # Update previous position
         self.prev_xh = xh.copy()
+        fe*=0.5
+
         ##############################################
         if self.device_connected: #set forces only if the device is connected
             p.update_force(fe)
@@ -168,5 +184,10 @@ if __name__=="__main__":
     try:
         while True:
             operator.run()
+    except EndGame as e:
+        print(f"Game stopped with exception: {e}")
+    except Exception as e:
+            print("Unhandled exception occurred:")
+            traceback.print_exc()
     finally:
         operator.close()

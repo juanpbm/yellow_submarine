@@ -58,7 +58,9 @@ class Graphics:
         self.sim_b = 0.8 #1.5#0.8       ##Viscous of the pseudohaptic display
         
         self.window_scale = 3000 #2500 #pixels per meter
-        self.device_origin = (int(self.window_size[0]/2.0),0)
+        
+        self.device_origin = (int(self.window_size[0]/2.0 + 0.038/2.0*self.window_scale),0)
+
         
         self.show_linkages = True
         self.show_debug = True
@@ -286,4 +288,3 @@ class Graphics:
     def close(self):
         pygame.display.quit()
         pygame.quit()
-

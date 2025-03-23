@@ -6,23 +6,45 @@ import socket
 import random
 import time
 import math
+import traceback
 
 from Physics import Physics
 from Graphics_submarine import Graphics
 
-        
+
+class EndGame(Exception):
+    """Exception raised for custom error in the application."""
+
+    def __init__(self, message, error_code=0):
+        self.message = message
+        super().__init__(self.message)
+        self.error_code = error_code
+
+    def __str__(self):
+        return f"{self.message} (Code: {self.error_code})"
+
 
 class Submarine:
     def __init__(self, render_haptics = True):
         self.max_time = 2 * 60 # "T_minutes" * 60s = T_seconds 
-        self.physics = Physics(hardware_version=0, connect_device=False) #setup physics class. Returns a boolean indicating if a device is connected
-        self.graphics = Graphics(False, max_time=self.max_time) #setup class for drawing and graphics.
+        self.physics = Physics(hardware_version=0, connect_device=False)  # Setup physics class
+#setup physics class. Returns a boolean indicating if a device is connected
+        self.graphics = Graphics(False, num_fish=2, max_time=self.max_time) #setup class for drawing and graphics.
         self.render_haptics = render_haptics
         # Set up UDP sockets
         self.send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recv_sock.bind(("127.0.0.1", 40002))
         self.recv_sock.setblocking(False)
+        
+        self.pAl = [0,0]
+        self.pBl = [0,0]
+        self.pEl = [0,0]
+        
+        self.collision_act = 0
+        
+        self.current_on = False
+        #self.wall = pygame.Rect(xc, yc, 300, 300)
         
         self.fish_left = pygame.transform.scale(pygame.image.load('imgs/fish_left.png'), (40, 20))
         self.fish_right = pygame.transform.scale(pygame.image.load('imgs/fish_right.png'), (40, 20))
@@ -31,7 +53,7 @@ class Submarine:
         
         self.fish_mode = 1
         
-        self.xc = [300,200]
+        self.xc = self.graphics.haptic.center
         #self.wall = pygame.Rect(xc, yc, 300, 300)
 
         # Objects
@@ -65,6 +87,16 @@ class Submarine:
                 i += 1
                 pass
         
+        self.wall = pygame.Rect(0, 300, 185, 600)
+        self.platform = pygame.Rect(600, 400, 800, 600)
+        self.table = pygame.Rect(630, 400, 800, 25)
+        self.ground = pygame.Rect(185, 575, 415, 50)
+        self.dGray = (50,50,50)
+        self.bGray = (230,230,230)
+        self.dBrown = (92, 64, 51)
+        self.Sand = (198, 166, 100)
+        
+
         self.mass=0.5
         self.haptic_width = 48
         self.haptic_height = 48
@@ -94,8 +126,30 @@ class Submarine:
         self.section_height = self.window_height // self.num_sections  
         self.perturbations = []  # List to store active perturbations
 
-        self.k_fish = 50  
+        self.k_fish = 50 
 
+        #self.wall = pygame.Rect(xc, yc, 300, 300)
+
+        # Wait for at least one message from the master. Only continue once something is received.
+        print("Waiting for operator communication")
+        i = 0
+        while True:
+            for event in pygame.event.get():  # Handle events to keep the window responsive
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit(0)
+            try: 
+                self.send_sock.sendto(np.array([0,0,0], dtype=np.float32).tobytes(), ("127.0.0.1", 40001))
+                _ = self.recv_sock.recvfrom(1024)
+                # Set a timeout to allow closing the window automatically when the communication is broken
+                self.recv_sock.settimeout(1)
+                print("Connected")
+                break
+            except BlockingIOError:
+                self.graphics.show_loading_screen(i)
+                i += 1
+                pass
+        
         # Init Metrics variables
         self.passed = False
         self.first = False
@@ -109,7 +163,7 @@ class Submarine:
         amplitude = random.uniform(0.1, 0.6)  
         frequency = random.uniform(0.5, 2.0)  
         start_time = time.time()  
-        duration = random.uniform(0.5, 1)  
+        duration = random.uniform(2.0, 3.0) 
         direction = random.choice([-1, 1])  
         return {
             "section": section,
@@ -120,7 +174,7 @@ class Submarine:
             "direction": direction,  
         }
 
-    def get_perturbation_force(self, xh):
+    def get_perturbation_force(self, xh,g):
   
         perturbation_force = np.array([0.0, 0.0]) 
 
@@ -131,10 +185,12 @@ class Submarine:
             elapsed_time = current_time - pert["start_time"]
 
             if elapsed_time < pert["duration"]:
+                self.current_on = True
                 
                 y_min = pert["section"] * self.section_height
                 y_max = (pert["section"] + 1) * self.section_height
 
+                g.current_pos[1] = y_min + (y_max-y_min)/2
                 
                 if y_min <= xh[1] <= y_max:
                     
@@ -145,7 +201,10 @@ class Submarine:
                     )
                     perturbation_force[0] += force_x
 
-                new_perturbations.append(pert) 
+                new_perturbations.append(pert)
+            else:
+                self.current_on = False
+                g.current_pos[1] = 1200
 
         self.perturbations = new_perturbations  
 
@@ -218,16 +277,21 @@ class Submarine:
             # Receive position
             recv_data, _ = self.recv_sock.recvfrom(64)
             data = np.array(np.frombuffer(recv_data, dtype=np.float64))
+            #print("message_recieved",data)
+            # Rescale xm[0] from -1 to 1 to 0 to 800
             xm = data[:2]
-            xm[0] = np.clip(xm[0] + ((g.submarine_pos[0] + 177) - (g.window_size[0] / 2)), -100, g.window_size[0] + 100)
-            xm[1] = np.clip((xm[1] * 1.3), 0, g.window_size[1] + 75)
+            # Rescale xm from -1 to 1 to 0 to 800,600
+            xm[0] = np.clip(((xm[0] + 1) / 2) * 800, 0, 800)
+            xm[1] = np.clip(((xm[1] + 1) / 2) * 600, 0, 600)
+ 
             xm = np.array(xm, dtype=int)
             xs = np.array(data[2:4], dtype=int)
             grab_object=data[4]
+            
         # If there is a timeout the connection with the operator has been lost
         except socket.timeout:
             pygame.quit()
-            raise RuntimeError("Connection lost")
+            raise EndGame("Connection lost", 1)
         
         # Grabbing Objects
         self.Grab_object(grab_object)
@@ -238,11 +302,11 @@ class Submarine:
             if not hasattr(self, "prev_xh"):
                 self.prev_xh = xh.copy()
 
-            if random.random() < 0.1:
+            if random.random() < 0.1 and self.current_on == False:
                 self.perturbations.append(self.generate_perturbation())
+                
 
-            f_wave = self.get_perturbation_force(xh)
-
+            f_wave = self.get_perturbation_force(xh,g)
             f_perturbation = -(self.mass * self.gravity - self.water_density * self.displaced_volume * self.gravity)
             f_perturbation = np.array([0, f_perturbation]) + f_wave
 
@@ -250,28 +314,28 @@ class Submarine:
             fe += f_perturbation 
             
             haptic_rect = pygame.Rect(xh[0], xh[1], self.haptic_width, self.haptic_height)
-
-            if haptic_rect.colliderect(pygame.Rect(self.fish_pos[0], self.fish_pos[1], 40, 20)):
-                penetration_depth = max(0, self.fish_pos[0] + 40 - haptic_rect.left)
+            # TODO: FEX FORCE FISH
+            if self.collision_act>0:
+                penetration_depth = max(0, self.collision_act + 40 - haptic_rect.left)
                 fe[0] += (self.k_fish * penetration_depth/600)
-
+                
             v_h = ((xh - self.prev_xh) / g.window_scale) / dt
             self.b_water = 0.5
             f_hydro = np.array(-self.b_water * v_h)
             fe += f_hydro
             
-            k_spring = 20
+            k_spring = 150
             b_damping = 2
             dt = 0.01
 
-            f_vspring = k_spring * (xh-self.xc) / g.window_scale
+            f_vspring = k_spring * (xh-g.xc) / g.window_scale
             if not hasattr(self, "prev_vh"):
                 self.prev_vh = v_h.copy()
             v_h = ((xh - self.prev_xh) / g.window_scale) / dt
 
             a_h = ((v_h - self.prev_vh) / g.window_scale) / dt
             f_damping = b_damping * v_h
-            
+
             f_inertia = self.mass* a_h
             if (self.object_grabbed):
                 fe += np.array([0,-9.8*(0)])
@@ -282,6 +346,7 @@ class Submarine:
         else: 
             fe = np.array([0,0], dtype=np.float32)
         
+
         # Send force the first 0 is the type of the message informing the operator that it is a force
         msg = np.array([0, *fe], dtype=np.float32)
         self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
@@ -290,16 +355,35 @@ class Submarine:
         self.prev_vh = v_h.copy()
         # Process the forces and position to render the environment
         xh = g.sim_forces(xh,fe,xm,mouse_k=0.5,mouse_b=0.8) #simulate forces with mouse haptics
+        
+        g.render_fish()
+
+        # Check collision with fish
+        for n, f in enumerate(g.fish):
+            if f == 1:              
+                # Check distance from fish to each line
+                if (g.effort_cursor.colliderect(g.fish_rect[n]) or 
+                    (xh[1] >= g.fish_pos[n][1] and (np.abs(g.fish_pos[n][0] - xh[0])<50))):
+                    self.collision_act = g.fish_pos[n][0]
+                    self.damage += 1.0
+                
+
+                    
+
         # Ensure haptic device stays within the window bounds
         xh[0] = np.clip(xh[0], 0, g.window_size[0] - self.haptic_width)
         xh[1] = np.clip(xh[1], 0, g.window_size[1] - self.haptic_height)
+        
+
         pos_phys = g.inv_convert_pos(xh)
         pA0,pB0,pA,pB,pE = p.derive_device_pos(pos_phys) #derive the pantograph joint positions given some endpoint position
+
         # Scale the physics results for submarine size
         pB0 = pA0
         pA = (pA[0] / 3, pA[1] / 3)
         pB = (pB[0] / 4, pB[1] / 4)
         pE = (pE[0] / 2, pE[1])
+
         pA0, pB0, pA, pB, xh = g.convert_pos(pA0, pB0, pA, pB, pE)
 
 
@@ -346,15 +430,6 @@ class Submarine:
             xh, self.collision_bottle= self.collision_object(xh,g.bottle, self.collision_bottle,5)
            
         g.render(pA0, pB0, pA, pB, xh, fe, xm, xs, self.init_time, self.damage)  # Render environment
-
-        if self.fish_pos[0] >= 550 and self.fish_dir == self.fish_right:
-            self.fish_mode = -1
-            self.fish_dir = self.fish_left
-        if self.fish_pos[0] <= 200 and self.fish_dir == self.fish_left:
-            self.fish_mode = 1
-            self.fish_dir = self.fish_right
-
-        self.fish_pos[0] += self.fish_mode
         
         # Skip First iteration as the distance should be 0
         if not self.first:
@@ -366,10 +441,10 @@ class Submarine:
         # Check if game is over
         if (time.time() - self.init_time >= self.max_time or self.damage >= 100):
             self.passed = False
-            raise RuntimeError("Game Finished")
+            raise EndGame("Game Finished", 0)
         elif len(self.objects_in_target) == 3:
             self.passed = True
-            raise RuntimeError("Game Finished")
+            raise EndGame("Game Finished", 0)
 
         
     def close(self, show_exit_screen):
@@ -390,6 +465,7 @@ class Submarine:
             start_time = time.time()
             while True:
                 try:
+                    self.send_sock.settimeout(0.5)
                     recv_data, _ = self.recv_sock.recvfrom(1024)
                     data = np.array(np.frombuffer(recv_data, dtype=bool))
                     if(data[0] == 1):
@@ -464,12 +540,17 @@ if __name__=="__main__":
         try:
             while True:
                 submarine.run()
-        except RuntimeError as e:
-            if str(e) == "Game Finished":
-                play_again = submarine.close(True)
-                submarine = None
-                continue
+        except EndGame as e:
+            print(f"Game stopped with exception: {e}")
+            play_again = submarine.close(True)
+            submarine = None
+            if(play_again == False):
+                pygame.quit()
+                sys.exit(1)
+        except Exception as e:
+            print("Unhandled exception occurred:")
+            traceback.print_exc()
+            break
 
-        play_again = submarine.close(False)
-        submarine = None
-
+            
+    
