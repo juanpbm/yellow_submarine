@@ -3,10 +3,12 @@ import pygame
 import numpy as np
 import sys 
 import os
+import time 
 
 class Graphics:
-    def __init__(self,device_connected,num_fish=0,window_size=(800,600)):
+    def __init__(self,device_connected,num_fish=0,window_size=(800,600), max_time=1.0):
         self.device_connected = device_connected
+        self.max_time = max_time
         #initialize pygame window
         self.window_size = window_size #default (600,400)
         os.environ['SDL_VIDEO_WINDOW_POS'] = "20,100"
@@ -15,7 +17,8 @@ class Graphics:
         pygame.display.set_caption('Yellow Submarine')
 
         self.screenHaptics = pygame.Surface(self.window_size)
-
+        self.xc = self.screenHaptics.get_rect().centerx
+        self.yc =self.screenHaptics.get_rect().centery
         ##add nice icon from https://www.flaticon.com/authors/vectors-market
         self.icon = pygame.image.load('imgs/yellow_submarine_left.png')
         pygame.display.set_icon(self.icon)
@@ -67,8 +70,30 @@ class Graphics:
         self.submarine_pos = (int(self.window_size[0]/2.0 - 80), 10)
         self.device_origin = (int(self.window_size[0]/2.0), 110)
         
+        # Object
+        self.object = pygame.Rect((350, 520, 55, 55))
+
+        #Obstacles
+        self.fish_mode = 1
+        self.fish_left = pygame.transform.scale(pygame.image.load('imgs/fish_left.png'), (40, 20))
+        self.fish_right = pygame.transform.scale(pygame.image.load('imgs/fish_right.png'), (40, 20))
+        self.fish_dir = self.fish_right
+        self.fish_pos = np.array([200,400])
+
+        self.wall = pygame.Rect(0, 300, 185, 600)
+        self.platform = pygame.Rect(600, 400, 800, 600)
+        self.table = pygame.Rect(630, 400, 800, 25)
+        self.ground = pygame.Rect(185, 575, 415, 50)
+        self.dGray = (50,50,50)
+        self.bGray = (230,230,230)
+        self.dBrown = (92, 64, 51)
+        self.Sand = (198, 166, 100)
+        
         self.show_linkages = True
         
+        self.current_pos = np.array([0,1200])
+        self.current = pygame.transform.scale(pygame.image.load('imgs/current_line.png'), (800, 120))
+        self.current_rect = self.current.get_rect(topleft=self.current_pos)
         
         # Fish
         self.fish_left = pygame.transform.scale(pygame.image.load('imgs/fish_left.png'), (40, 20))
@@ -197,7 +222,7 @@ class Graphics:
         # plot hight map
         self.screenHaptics.fill(self.cWhite) #erase the haptics surface
         pixels = np.zeros((self.window_size[1], self.window_size[0], 3), dtype=np.uint8)  # Create empty image
-        Y_color = np.linspace(255, 0, self.window_size[1])[:, None]  # Gradient from 255 (top) to 0 (bottom)
+        Y_color = np.linspace(255, 100, self.window_size[1])[:, None]  # Gradient from 255 (top) to 0 (bottom)
 
         # Apply the gradient to the blue channel
         pixels[:, :, 0] = 0  
@@ -208,19 +233,22 @@ class Graphics:
         surface = pygame.surfarray.make_surface(pixels.swapaxes(0, 1))
         self.screenHaptics.blit(surface, (0, 0))
     
-    def render(self,pA0,pB0,pA,pB,pE,f,pM, pS):
+    def render(self,pA0,pB0,pA,pB,pE,f,pM, pS, st, dam  ):
         ###################Render the Haptic Surface###################
         #set new position of items indicating the endpoint location
-        # fish
+        self.screenHaptics.blit(self.current, self.current_pos)
         
         self.haptic.center = pE #the hhandle image and effort square will also use this position for drawing
         self.effort_cursor.center = self.haptic.center
 
-        if self.device_connected:
-            self.effort_color = (255,255,255)
+        # Draw Object
+        pygame.draw.rect(self.screenHaptics, "red", self.object)
 
-        #pygame.draw.rect(self.screenHaptics, self.effort_color, self.haptic,border_radius=4)
-        pygame.draw.rect(self.screenHaptics, self.effort_color, self.effort_cursor,border_radius=8)
+        # Draw Background elements
+        pygame.draw.rect(self.screenHaptics,self.dBrown,self.wall)
+        pygame.draw.rect(self.screenHaptics,self.dGray,self.platform)
+        pygame.draw.rect(self.screenHaptics,self.bGray,self.table)
+        pygame.draw.rect(self.screenHaptics,self.Sand,self.ground)
 
         ######### Robot visualization ###################
         if self.show_linkages:
@@ -247,8 +275,26 @@ class Graphics:
         self.device_origin = (pS[0] + 75, pS[1] + 90)
         self.screenHaptics.blit(self.submarine_dir, self.submarine_pos)
 
-        if not self.device_connected:
-            pygame.draw.lines(self.screenHaptics, (0,0,0), False,[self.effort_cursor.center,pM],2)
+        # Display time
+        remaining_time = max(0, self.max_time - (time.time() - st))
+        time_text = f"T: {int(remaining_time//60)}:{int(remaining_time%60)}"
+        time_font = pygame.font.Font('freesansbold.ttf', 20)
+        time_text = time_font.render(time_text, True, (255, 255, 255), (0, 0, 0))
+        time_text_rect = time_text.get_rect()
+        time_text_rect.bottomleft = (5, 600)
+        self.screenHaptics.blit(time_text, time_text_rect)
+
+        #Display damage
+        damage_text = "Health: "
+        damage_font = pygame.font.Font('freesansbold.ttf', 20)
+        damage_text = damage_font.render(damage_text, True, (255, 255, 255), (0, 0, 0))
+        damage_text_rect = damage_text.get_rect()
+        damage_text_rect.bottomleft = (615, 599)
+        self.screenHaptics.blit(damage_text, damage_text_rect)
+        pygame.draw.rect(self.screenHaptics, (100, 100, 100), (695, 573, 100, 25), border_radius=5)
+        # Draw progress fill (green)
+        pygame.draw.rect(self.screenHaptics, (255 * ((dam/100)), 255 * (1-(dam/100)), 0), (695, 573, 100 * (1-(dam/100)), 25), border_radius=5)
+
         ##Fuse it back together
         self.window.blit(self.screenHaptics, (0,0))
 
@@ -268,7 +314,8 @@ class Graphics:
             init_text_rect = init_text.get_rect()
             init_text_rect.topleft = (50, 300)
             self.window.blit(init_text, init_text_rect)
-            pygame.display.flip()  
+            pygame.display.flip()
+        return 0
 
     # FISH
     def render_fish(self):
@@ -297,6 +344,3 @@ class Graphics:
     def close(self):
         pygame.display.quit()
         pygame.quit()
-
-    
-
