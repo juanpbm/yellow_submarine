@@ -3,6 +3,7 @@ import sys
 import numpy as np
 import pygame
 import socket
+import traceback
 
 from Physics import Physics
 from Graphics_operator import Graphics
@@ -28,8 +29,8 @@ class RemoteOperator:
         self.graphics.show_loading_screen()
         run = True
         while run:
-            keyups, _, _= self.graphics.get_events()
-            for key in keyups:
+            _, _, _, keydowns= self.graphics.get_events()
+            for key in keydowns:
                 if key== pygame.K_SPACE:
                     run = False 
 
@@ -53,8 +54,7 @@ class RemoteOperator:
         p = self.physics #assign these to shorthand variables for easier use in this function
         g = self.graphics
         #get input events for both keyboard and mouse
-        keyups, xm, keypressed = g.get_events()
-        
+        keyups, xm, keypressed, mouse_pressed = g.get_events()
         #  - keyups: list of unicode numbers for keys on the keyboard that were released this cycle
         #  - pm: coordinates of the mouse on the graphics screen this cycle (x,y)      
         #get the state of the device, or otherwise simulate it if no device is connected (using the mouse position)
@@ -82,30 +82,26 @@ class RemoteOperator:
                 g.show_linkages = not g.show_linkages
             if key == ord('d'): #Change the visibility of the debug text
                 g.show_debug = not g.show_debug
-            if key == 32: # Space bar pressed
-                if (self.grab_object== 0):
-                    self.grab_object= 1
+            if key == pygame.K_SPACE: # Space bar pressed
+                if (self.grab_object == 0):
+                    self.grab_object = 1
                 else:
-                    self.grab_object= 0
+                    self.grab_object = 0
+
         if keypressed[pygame.K_LEFT]:
             self.xs[0] = np.clip(self.xs[0] - 1, 0, 800 - 150)
         if keypressed[pygame.K_RIGHT]:
             self.xs[0] = np.clip(self.xs[0] + 1, 0, 800 - 150)
 
         # Send Position from the haptic device or mouse and the submarine position
-        # Send Position from the haptic device or mouse and the submarine position
-# Scale xh between -1 and 1
+        # Scale xh between -1 and 1
         xh_scaled = np.array([
             2 * (xh[0] / 600) - 1,  # Scale xh[0] from 0-700 to -1 to 1
             2 * (xh[1] / 400) - 1,  # Scale xh[1] from 0-500 to -1 to 1
         ])
 
-        # Create the message array
+        # Create and send the message array
         message = np.array([xh_scaled, self.xs, (self.grab_object, 0)])
-
-     
-
-        # Send the message
         self.send_sock.sendto(message.tobytes(), ("127.0.0.1", 40002))
 
         # Receive Force feedback
@@ -117,7 +113,7 @@ class RemoteOperator:
                     while True:  # Keep reading until the buffer is empty
                         self.recv_sock.settimeout(0.01)
                         recv_data, _ = self.recv_sock.recvfrom(1024)
-                        last_message = recv_data  # Store the latest message
+                        last_message = recv_data  # Store the latest message                        
                 except socket.timeout:
                     self.recv_sock.settimeout(1)
                     break  # Exit loop when no more data is available
@@ -128,12 +124,12 @@ class RemoteOperator:
                 # TODO: Scale the feedback to make it stable
                 fe = np.array(rcv_msg[1:], dtype=np.float32)
             # if the first element is a 1 is a metrics and game over message
-            else:
+            elif (int(rcv_msg[0]) == 1 ):
                 passed, final_time, path_length, damage = rcv_msg[1:]
                 # Show game over screen with received metrics
                 play_again = self.graphics.show_exit_screen(passed, final_time, path_length, damage)
                 # send play again message to submarine
-                snd_msg = np.array([play_again], dtype=bool)
+                snd_msg = np.array([1, play_again], dtype=bool)
                 self.send_sock.sendto(snd_msg.tobytes(), ("127.0.0.1", 40002))
 
                 # if not play again end the operator
@@ -146,18 +142,20 @@ class RemoteOperator:
 
                 run = True
                 while run:
-                    keyups, _, _= self.graphics.get_events()
-                    for key in keyups:
+                    _, _, _, keydowns= self.graphics.get_events()
+                    for key in keydowns:
                         if key== pygame.K_SPACE:
                             run = False 
+            elif (int(rcv_msg[0]) == 2 ):
+                self.grab_object = 0
+
         except socket.timeout:
             pygame.quit()
             raise EndGame("Connection lost", 1)
 
-        
         # Update previous position
         self.prev_xh = xh.copy()
-        fe*=0.5
+        fe *= 0.5
 
         ##############################################
         if self.device_connected: #set forces only if the device is connected
@@ -182,6 +180,8 @@ if __name__=="__main__":
             operator.run()
     except EndGame as e:
         print(f"Game stopped with exception: {e}")
-
+    except Exception as e:
+            print("Unhandled exception occurred:")
+            traceback.print_exc()
     finally:
         operator.close()

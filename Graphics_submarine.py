@@ -46,8 +46,16 @@ class Graphics:
         self.cGreen = (0,255,0)
         self.cOrange = (255,100,0)
         self.cYellow = (255,255,0)
+        self.dGray = (50,50,50)
+        self.bGray = (230,230,230)
+        self.dBrown = (92, 64, 51)
+        self.Sand = (198, 166, 100)
+        self.dGray = (50,50,50)
+        self.bGray = (230,230,230)
+        self.dBrown = (92, 64, 51)
+        self.Sand = (198, 166, 100)
         
-        self.hhandle = pygame.image.load('imgs/hand.png') #
+        self.hhandle = pygame.image.load('imgs/hand.png') 
         
         self.haptic_width = 48
         self.haptic_height = 48
@@ -56,7 +64,7 @@ class Graphics:
         self.colorHaptic = self.cOrange ##color of the wall
 
         # Make submarine
-        # im age taken from https://www.cleanpng.com/png-yellow-submarine-clip-art-submarine-biomass-vector-1902493/
+        # image taken from https://www.cleanpng.com/png-yellow-submarine-clip-art-submarine-biomass-vector-1902493/
         self.submarine_left = pygame.transform.scale(pygame.image.load('imgs/yellow_submarine_left.png'), (150, 100))
         self.submarine_right = pygame.transform.scale(pygame.image.load('imgs/yellow_submarine_right.png'), (150, 100))
         self.submarine_dir = self.submarine_left
@@ -70,27 +78,23 @@ class Graphics:
         self.submarine_pos = (int(self.window_size[0]/2.0 - 80), 10)
         self.device_origin = (int(self.window_size[0]/2.0 + 0.038/2.0*self.window_scale),0)
         
-        # Object
-        self.object = pygame.Rect((350, 520, 55, 55))
+        # Targets
+        self.anchor_img = pygame.image.load('imgs/anchor.png')
+        self.chest_img = pygame.image.load('imgs/chest.png')
+        self.bottle_img = pygame.image.load('imgs/bottle.png')
+        self.anchor = self.anchor_img.get_rect(topleft=(500, 490))
+        self.chest = self.chest_img.get_rect(topleft=(50, 255))
+        self.bottle = self.bottle_img.get_rect(topleft=(200, 542))
 
-        #Obstacles
-        self.fish_mode = 1
-        self.fish_left = pygame.transform.scale(pygame.image.load('imgs/fish_left.png'), (40, 20))
-        self.fish_right = pygame.transform.scale(pygame.image.load('imgs/fish_right.png'), (40, 20))
-        self.fish_dir = self.fish_right
-        self.fish_pos = np.array([200,400])
-
+        # Background elements
         self.wall = pygame.Rect(0, 300, 185, 600)
         self.platform = pygame.Rect(600, 400, 800, 600)
         self.table = pygame.Rect(630, 400, 800, 25)
         self.ground = pygame.Rect(185, 575, 415, 50)
-        self.dGray = (50,50,50)
-        self.bGray = (230,230,230)
-        self.dBrown = (92, 64, 51)
-        self.Sand = (198, 166, 100)
-        
+
         self.show_linkages = True
         
+        # Currents
         self.current_pos = np.array([0,1200])
         self.current = pygame.transform.scale(pygame.image.load('imgs/current_line.png'), (800, 120))
         self.current_rect = self.current.get_rect(topleft=self.current_pos)
@@ -111,23 +115,12 @@ class Graphics:
         
         self.fish_rect = np.array([fish1, fish2, fish3])
         
-        
         if(num_fish >= 1):
             self.fish[0] = 1
         if(num_fish >= 2):
             self.fish[1] = 1
         if(num_fish >= 3):
             self.fish[2] = 1
-            
-        self.wall = pygame.Rect(0, 300, 185, 600)
-        self.platform = pygame.Rect(600, 400, 800, 600)
-        self.table = pygame.Rect(630, 400, 800, 25)
-        self.ground = pygame.Rect(185, 575, 415, 50)
-        self.dGray = (50,50,50)
-        self.bGray = (230,230,230)
-        self.dBrown = (92, 64, 51)
-        self.Sand = (198, 166, 100)
-
 
     def convert_pos(self,*positions):
         #invert x because of screen axes
@@ -233,7 +226,7 @@ class Graphics:
         surface = pygame.surfarray.make_surface(pixels.swapaxes(0, 1))
         self.screenHaptics.blit(surface, (0, 0))
     
-    def render(self,pA0,pB0,pA,pB,pE,f,pM, pS, st, dam  ):
+    def render(self,pA0,pB0,pA,pB,pE,f,pM, pS, st, dam):
         ###################Render the Haptic Surface###################
         #set new position of items indicating the endpoint location
         self.screenHaptics.blit(self.current, self.current_pos)
@@ -242,7 +235,9 @@ class Graphics:
         self.effort_cursor.center = self.haptic.center
 
         # Draw Object
-        pygame.draw.rect(self.screenHaptics, "red", self.object)
+        self.screenHaptics.blit(self.anchor_img, self.anchor)
+        self.screenHaptics.blit(self.chest_img, self.chest)
+        self.screenHaptics.blit(self.bottle_img, self.bottle)
 
         # Draw Background elements
         pygame.draw.rect(self.screenHaptics,self.dBrown,self.wall)
@@ -294,11 +289,10 @@ class Graphics:
         self.screenHaptics.blit(damage_text, damage_text_rect)
         pygame.draw.rect(self.screenHaptics, (100, 100, 100), (695, 573, 100, 25), border_radius=5)
         # Draw progress fill (green)
-        pygame.draw.rect(self.screenHaptics, (255 * ((dam/100)), 255 * (1-(dam/100)), 0), (695, 573, 100 * (1-(dam/100)), 25), border_radius=5)
+        pygame.draw.rect(self.screenHaptics, (255 * ((min(dam,100)/100)), 255 * (1-(min(dam,100)/100)), 0), (695, 573, 100 * (1-(min(dam,100)/100)), 25), border_radius=5)
 
         ##Fuse it back together
         self.window.blit(self.screenHaptics, (0,0))
-
 
         pygame.display.flip()    
         ##Slow down the loop to match FPS

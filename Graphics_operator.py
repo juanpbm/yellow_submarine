@@ -10,7 +10,7 @@ class Graphics:
         
         #initialize pygame window
         self.window_size = window_size
-        #os.environ['SDL_VIDEO_WINDOW_POS'] = "830,150"
+        os.environ['SDL_VIDEO_WINDOW_POS'] = "830,150"
 
         pygame.init()
         self.window = pygame.display.set_mode((window_size[0], window_size[1]))   ##twice 600x400 for haptic and VR
@@ -102,6 +102,7 @@ class Graphics:
         #########Process events  (Mouse, Keyboard etc...)#########
         events = pygame.event.get()
         keyups = []
+        keydowns = []
         keypress = []
         for event in events:
             if event.type == pygame.QUIT: #close window button was pressed
@@ -109,11 +110,13 @@ class Graphics:
                 sys.exit(0) #raises a system exit exception so any Finally will actually execute
             elif event.type == pygame.KEYUP:
                 keyups.append(event.key)
+            elif event.type == pygame.KEYDOWN:
+                keydowns.append(event.key)
 
         keypress = pygame.key.get_pressed()
         mouse_pos = pygame.mouse.get_pos()
         
-        return keyups, mouse_pos, keypress
+        return keyups, mouse_pos, keypress, keydowns
 
     def sim_forces(self,pE,f,pM,mouse_k=None,mouse_b=None):
         #simulated device calculations
@@ -265,21 +268,20 @@ class Graphics:
         continue_text_rect = continue_text.get_rect()
         continue_text_rect.center = (350, 400)
         self.window.blit(continue_text, continue_text_rect)
-
+    
         pygame.display.flip() 
+
         display = True
         play_again = False
         while display:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT: #close window button was pressed
-                    sys.exit(0) #raises a system exit exception so any Finally will actually execute
-                elif event.type == pygame.KEYUP:
-                    if  event.key == pygame.K_SPACE:
-                        display = False
-                        play_again = True
-                    else:
-                        display = False
-                        play_again = False
+            _, _, _, keydowns= self.get_events()
+            for key in keydowns:
+                if key== pygame.K_SPACE:
+                    display = False
+                    play_again = True
+                else:
+                    display = False
+                    play_again = False
 
         return play_again
 
