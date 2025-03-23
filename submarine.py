@@ -40,7 +40,8 @@ class Submarine:
         self.object_mass = 0
         self.grabbed_object = ""
 
-        self.collision= 0
+        self.collision_platform= 0
+        self.collision_wall= 0
         # Wait for at least one message from the master. Only continue once something is received.
         print("Waiting for operator communication")
         i = 0
@@ -301,39 +302,42 @@ class Submarine:
 
         #Check collision with platform on the right and limit the handle position accordingly
 
-        if ((xh[0]+ 20)>g.platform.topleft[0]) and ((xh[1]+25)>g.platform.topleft[1]) and self.collision==0:
+        if ((xh[0]+ 20)>g.platform.topleft[0]) and ((xh[1]+25)>g.platform.topleft[1]) and (self.collision_platform==0):
 
-            if ((xh[0]-g.platform.topleft[0]) > (xh[1]-g.platform.topleft[1])):
-                self.collision=1
+            if ((xh[0]+ 20)-g.platform.topleft[0]) > ((xh[1]+25)-g.platform.topleft[1]):
+                self.collision_platform=1
             else:
-                self.collision=2        
+                self.collision_platform=2  
 
-        if (((xh[1]+25)<(g.platform.topleft[1])) or (xh[0] + 20)<(g.platform.topleft[0])) and (self.collision!=0):
-            self.collision=0
+            print("Change collision")      
 
-        elif(self.collision==1):
+        if (((xh[1]+25)<(g.platform.topleft[1])) or (xh[0] + 20)<(g.platform.topleft[0])) and (self.collision_platform!=0):
+            self.collision_platform=0
+            print("collision_platform no longer detected")
+
+        elif(self.collision_platform==1):
             xh[1]=g.platform.topleft[1]-25
 
-        elif(self.collision==2):
+        elif(self.collision_platform==2):
             xh[0]=g.platform.topleft[0]-20
 
-
+        print(self.collision_platform)
         #Check collision with wall on the left and limit the handle position accordingly
 
-        if ((xh[0] - 20)<g.wall.topright[0]) and ((xh[1]+25)>g.wall.topright[1]) and self.collision==0:
+        if ((xh[0] - 20)<g.wall.topright[0]) and ((xh[1]+25)>g.wall.topright[1]) and self.collision_wall==0:
 
-            if ( - (xh[0]-g.wall.topright[0]) > (xh[1]-g.wall.topright[1])):
-                self.collision=1
+            if ( - ((xh[0] - 20)-g.wall.topright[0]) > ((xh[1]+25)-g.wall.topright[1])):
+                self.collision_wall=1
             else:
-                self.collision=2        
+                self.collision_wall=2        
 
-        if (((xh[1]+25)<(g.wall.topright[1])) or (xh[0] - 20)>(g.wall.topright[0])) and (self.collision!=0):
-            self.collision=0
+        if (((xh[1]+25)<(g.wall.topright[1])) or (xh[0] - 20)>(g.wall.topright[0])) and (self.collision_wall!=0):
+            self.collision_wall=0
 
-        elif(self.collision==1):
+        elif(self.collision_wall==1):
             xh[1]=g.wall.topright[1]-25
 
-        elif(self.collision==2):
+        elif(self.collision_wall==2):
             xh[0]=g.wall.topright[0] + 20
 
         
