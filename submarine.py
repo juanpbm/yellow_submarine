@@ -42,6 +42,9 @@ class Submarine:
 
         self.collision_platform= 0
         self.collision_wall= 0
+        self.collision_anchor = 0
+        self.collision_chest = 0
+        self.collision_bottle= 0
         # Wait for at least one message from the master. Only continue once something is received.
         print("Waiting for operator communication")
         i = 0
@@ -309,11 +312,8 @@ class Submarine:
             else:
                 self.collision_platform=2  
 
-            print("Change collision")      
-
-        if (((xh[1]+25)<(g.platform.topleft[1])) or (xh[0] + 20)<(g.platform.topleft[0])) and (self.collision_platform!=0):
+        elif (((xh[1]+25)<(g.platform.topleft[1])) or (xh[0] + 20)<(g.platform.topleft[0])) and (self.collision_platform!=0):
             self.collision_platform=0
-            print("collision_platform no longer detected")
 
         elif(self.collision_platform==1):
             xh[1]=g.platform.topleft[1]-25
@@ -321,7 +321,6 @@ class Submarine:
         elif(self.collision_platform==2):
             xh[0]=g.platform.topleft[0]-20
 
-        print(self.collision_platform)
         #Check collision with wall on the left and limit the handle position accordingly
 
         if ((xh[0] - 20)<g.wall.topright[0]) and ((xh[1]+25)>g.wall.topright[1]) and self.collision_wall==0:
@@ -331,7 +330,7 @@ class Submarine:
             else:
                 self.collision_wall=2        
 
-        if (((xh[1]+25)<(g.wall.topright[1])) or (xh[0] - 20)>(g.wall.topright[0])) and (self.collision_wall!=0):
+        elif (((xh[1]+25)<(g.wall.topright[1])) or (xh[0] - 20)>(g.wall.topright[0])) and (self.collision_wall!=0):
             self.collision_wall=0
 
         elif(self.collision_wall==1):
@@ -341,7 +340,33 @@ class Submarine:
             xh[0]=g.wall.topright[0] + 20
 
         
+        if (self.object_grabbed==False):
+            xh, self.collision_anchor= self.collision_object(xh,g.anchor, self.collision_anchor)
+            xh, self.collision_chest= self.collision_object(xh,g.chest, self.collision_chest)
+            xh, self.collision_bottle= self.collision_object(xh,g.bottle, self.collision_bottle,5)
+            # xh= self.collision_object(xh,g.chest, self.collision_chest)
+            # if (((xh[0]+ 20)>g.anchor.topleft[0]) and ((xh[0]- 20)<g.anchor.topright[0]) ) and ((xh[1]+12)>g.anchor.topleft[1]) and (self.collision_anchor==0):
 
+            #     if (((xh[0]+ 20)-g.anchor.topleft[0]) > ((xh[1]+12)-g.anchor.topleft[1])):
+            #         if ( -((xh[0]- 20)-g.anchor.topright[0]))  > ((xh[1]+12)-g.anchor.topleft[1]):
+            #             self.collision_anchor=1
+
+            #         else:
+            #             self.collision_anchor=3
+            #     else:
+            #         self.collision_anchor=2  
+
+            # elif ( ((xh[1]+12)<(g.anchor.topleft[1])) or ((xh[0] + 20)<(g.anchor.topleft[0])) or ((xh[0] - 20)>(g.anchor.topright[0]))) and (self.collision_anchor!=0) :
+            #     self.collision_anchor=0
+
+            # elif(self.collision_anchor==1):
+            #     xh[1]=g.anchor.topleft[1]-12
+
+            # elif(self.collision_anchor==2):
+            #     xh[0]=g.anchor.topleft[0]-20
+
+            # elif(self.collision_anchor==3):
+            #     xh[0]=g.anchor.topright[0] + 20
 
 
         # msg = np.array([0, *fe], dtype=np.float32)
@@ -407,7 +432,33 @@ class Submarine:
         self.send_sock.close()
         self.recv_sock.close()
         return play_again
+    
+    def collision_object(self,xh, object, collision_specific_object, offset=0 ):
+ 
+        if (((xh[0]+ 20)>object.topleft[0]) and ((xh[0]- 20)<object.topright[0]) ) and ((xh[1]+12 + offset)>object.topleft[1]) and (collision_specific_object==0):
 
+                if (((xh[0]+ 20)-object.topleft[0]) > ((xh[1]+12 - offset)-object.topleft[1])):
+                    if ( -((xh[0]- 20)-object.topright[0]))  > ((xh[1]+12 + offset)-object.topleft[1]):
+                        collision_specific_object=1
+
+                    else:
+                        collision_specific_object=3
+                else:
+                    collision_specific_object=2  
+
+        elif ( ((xh[1]+12 + offset)<(object.topleft[1])) or ((xh[0] + 20)<(object.topleft[0])) or ((xh[0] - 20)>(object.topright[0]))) and (collision_specific_object!=0) :
+            collision_specific_object=0
+
+        elif(collision_specific_object==1):
+            xh[1]=object.topleft[1]-12 - offset
+
+        elif(collision_specific_object==2):
+            xh[0]=object.topleft[0]-20
+
+        elif(collision_specific_object==3):
+            xh[0]=object.topright[0] + 20
+
+        return xh, collision_specific_object
 
 
 if __name__=="__main__":
