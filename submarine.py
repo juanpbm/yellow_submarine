@@ -26,8 +26,9 @@ class EndGame(Exception):
 class Submarine:
     def __init__(self, render_haptics = True):
         self.max_time = 2 * 60 # "T_minutes" * 60s = T_seconds 
-        self.physics = Physics(hardware_version=0, connect_device=False) #setup physics class. Returns a boolean indicating if a device is connected
-        self.graphics = Graphics(False,num_fish=2, max_time=self.max_time) #setup class for drawing and graphics.
+        self.physics = Physics(hardware_version=3)  # Setup physics class
+#setup physics class. Returns a boolean indicating if a device is connected
+        self.graphics = Graphics(False, num_fish=2, max_time=self.max_time) #setup class for drawing and graphics.
         self.render_haptics = render_haptics
         # Set up UDP sockets
         self.send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -43,27 +44,24 @@ class Submarine:
         
         self.current_on = False
         #self.wall = pygame.Rect(xc, yc, 300, 300)
-
-        # Wait for at least one message from the master. Only continue once something is received.
-        print("Waiting for operator communication")
-        i = 0
-        while True:
-            for event in pygame.event.get():  # Handle events to keep the window responsive
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit(0)
-            try: 
-                self.send_sock.sendto(np.array([0,0,0], dtype=np.float32).tobytes(), ("127.0.0.1", 40001))
-                _ = self.recv_sock.recvfrom(1024)
-                # Set a timeout to allow closing the window automatically when the communication is broken
-                self.recv_sock.settimeout(1)
-                print("Connected")
-                break
-            except BlockingIOError:
-                self.graphics.show_loading_screen(i)
-                i += 1
-                pass
         
+        self.fish_left = pygame.transform.scale(pygame.image.load('imgs/fish_left.png'), (40, 20))
+        self.fish_right = pygame.transform.scale(pygame.image.load('imgs/fish_right.png'), (40, 20))
+        self.fish_dir = self.fish_right
+        self.fish_pos = np.array([200,400])
+        
+        self.fish_mode = 1
+        
+        self.wall = pygame.Rect(0, 300, 185, 600)
+        self.platform = pygame.Rect(600, 400, 800, 600)
+        self.table = pygame.Rect(630, 400, 800, 25)
+        self.ground = pygame.Rect(185, 575, 415, 50)
+        self.dGray = (50,50,50)
+        self.bGray = (230,230,230)
+        self.dBrown = (92, 64, 51)
+        self.Sand = (198, 166, 100)
+        self.xc = self.graphics.haptic.center
+
         self.mass=0.5
         self.haptic_width = 48
         self.haptic_height = 48
@@ -89,11 +87,35 @@ class Submarine:
 
         # Perturbation parameters
         self.window_height = 600  
-        self.num_sections = 5  
+        self.num_sections = 10  
         self.section_height = self.window_height // self.num_sections  
         self.perturbations = []  # List to store active perturbations
 
-        self.k_fish = 50  
+        self.k_fish = 50 
+
+        #self.wall = pygame.Rect(xc, yc, 300, 300)
+
+        # Wait for at least one message from the master. Only continue once something is received.
+        print("Waiting for operator communication")
+        i = 0
+        while True:
+            for event in pygame.event.get():  # Handle events to keep the window responsive
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit(0)
+            try: 
+                self.send_sock.sendto(np.array([0,0,0], dtype=np.float32).tobytes(), ("127.0.0.1", 40001))
+                _ = self.recv_sock.recvfrom(1024)
+                # Set a timeout to allow closing the window automatically when the communication is broken
+                self.recv_sock.settimeout(1)
+                print("Connected")
+                break
+            except BlockingIOError:
+                self.graphics.show_loading_screen(i)
+                i += 1
+                pass
+        
+ 
 
         # Init Metrics variables
         self.passed = False
@@ -164,18 +186,22 @@ class Submarine:
         g.erase_screen()
         cursor=g.effort_cursor
         
-        
         # Receive and process messages
         try:
             # Receive position
             recv_data, _ = self.recv_sock.recvfrom(64)
             data = np.array(np.frombuffer(recv_data, dtype=np.float64))
+            #print("message_recieved",data)
+            # Rescale xm[0] from -1 to 1 to 0 to 800
             xm = data[:2]
-            xm[0] = np.clip(xm[0] + ((g.submarine_pos[0] + 177) - (g.window_size[0] / 2)), -100, g.window_size[0] + 100)
-            xm[1] = np.clip((xm[1] * 1.3), 0, g.window_size[1] + 75)
+            # Rescale xm from -1 to 1 to 0 to 800,600
+            xm[0] = np.clip(((xm[0] + 1) / 2) * 800, 0, 800)
+            xm[1] = np.clip(((xm[1] + 1) / 2) * 600, 0, 600)
+ 
             xm = np.array(xm, dtype=int)
             xs = np.array(data[2:4], dtype=int)
             grab_object=data[4]
+            
         # If there is a timeout the connection with the operator has been lost
         except socket.timeout:
             pygame.quit()
@@ -186,7 +212,7 @@ class Submarine:
 
             if not hasattr(self, "prev_xh"):
                 self.prev_xh = xh.copy()
-            print(self.current_on)
+
             if random.random() < 0.1 and self.current_on == False:
                 self.perturbations.append(self.generate_perturbation())
                 
@@ -209,7 +235,7 @@ class Submarine:
             f_hydro = np.array(-self.b_water * v_h)
             fe += f_hydro
             
-            k_spring = 20
+            k_spring = 150
             b_damping = 2
             dt = 0.01
 
@@ -243,7 +269,6 @@ class Submarine:
         xh = g.sim_forces(xh,fe,xm,mouse_k=0.5,mouse_b=0.8) #simulate forces with mouse haptics
         
         g.render_fish()
-        
 
         # Check collision with fish
         for n, f in enumerate(g.fish):
@@ -260,19 +285,19 @@ class Submarine:
         # Ensure haptic device stays within the window bounds
         xh[0] = np.clip(xh[0], 0, g.window_size[0] - self.haptic_width)
         xh[1] = np.clip(xh[1], 0, g.window_size[1] - self.haptic_height)
+        
+
         pos_phys = g.inv_convert_pos(xh)
         pA0,pB0,pA,pB,pE = p.derive_device_pos(pos_phys) #derive the pantograph joint positions given some endpoint position
-        self.pAl = pA
-        self.pBl = pB
-        self.pEl = pE
+
         # Scale the physics results for submarine size
         pB0 = pA0
         pA = (pA[0] / 3, pA[1] / 3)
         pB = (pB[0] / 4, pB[1] / 4)
         pE = (pE[0] / 2, pE[1])
+
         pA0, pB0, pA, pB, xh = g.convert_pos(pA0, pB0, pA, pB, pE)
         g.render(pA0, pB0, pA, pB, xh, fe, xm, xs, self.init_time, self.damage)  # Render environment
-
         
         # Skip First iteration as the distance should be 0
         if not self.first:
@@ -282,13 +307,13 @@ class Submarine:
             self.path_length += np.linalg.norm(self.prev_xh - np.ceil(xh))
 
         # Check if game is over
-        print(time.time() - self.init_time, self.damage, (time.time() - self.init_time >= self.max_time or self.damage >= 100))
+        #print(time.time() - self.init_time, self.damage, (time.time() - self.init_time >= self.max_time or self.damage >= 100))
         if (time.time() - self.init_time >= self.max_time or self.damage >= 100):
             self.passed = False
             raise EndGame("Game Finished", 0)
         
     def close(self):
-        # Get Metrics 
+        # Get Metrics
         final_time = time.time() - self.init_time
         results = np.array([1, self.passed, final_time, self.path_length, self.damage], dtype=np.float32)
         # Send metrics the first element is 1, the type of the message informing the operator that it is a metrics message
@@ -347,7 +372,7 @@ if __name__=="__main__":
             print(f"Game stopped with exception: {e}")
             play_again = submarine.close()
             submarine = None
-            if(e.error_code == 1):
+            if(play_again == False):
                 pygame.quit()
                 sys.exit(1)
         except:

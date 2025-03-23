@@ -68,7 +68,7 @@ class Graphics:
         # initial position
         self.window_scale = 3000 #2500 #pixels per meter
         self.submarine_pos = (int(self.window_size[0]/2.0 - 80), 10)
-        self.device_origin = (int(self.window_size[0]/2.0), 110)
+        self.device_origin = (int(self.window_size[0]/2.0 + 0.038/2.0*self.window_scale),0)
         
         # Object
         self.object = pygame.Rect((350, 520, 55, 55))
@@ -274,6 +274,7 @@ class Graphics:
         self.submarine_pos = tuple(pS)
         self.device_origin = (pS[0] + 75, pS[1] + 90)
         self.screenHaptics.blit(self.submarine_dir, self.submarine_pos)
+
 
         # Display time
         remaining_time = max(0, self.max_time - (time.time() - st))

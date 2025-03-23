@@ -54,12 +54,14 @@ class RemoteOperator:
         g = self.graphics
         #get input events for both keyboard and mouse
         keyups, xm, keypressed = g.get_events()
+        
         #  - keyups: list of unicode numbers for keys on the keyboard that were released this cycle
         #  - pm: coordinates of the mouse on the graphics screen this cycle (x,y)      
         #get the state of the device, or otherwise simulate it if no device is connected (using the mouse position)
         if self.device_connected:
             pA0,pB0,pA,pB,pE = p.get_device_pos() #positions of the various points of the pantograph
             pA0,pB0,pA,pB,xh = g.convert_pos(pA0,pB0,pA,pB,pE) #convert the physical positions to screen coordinates
+            print(xh)
         else:
             xh = g.haptic.center
             #set xh to the current haptic position, which is from the last frame.
@@ -92,7 +94,18 @@ class RemoteOperator:
 
         # Send Position from the haptic device or mouse and the submarine position
         # Send Position from the haptic device or mouse and the submarine position
-        message = np.array([xh, self.xs,(self.grab_object,0)])
+# Scale xh between -1 and 1
+        xh_scaled = np.array([
+            2 * (xh[0] / 600) - 1,  # Scale xh[0] from 0-700 to -1 to 1
+            2 * (xh[1] / 400) - 1,  # Scale xh[1] from 0-500 to -1 to 1
+        ])
+
+        # Create the message array
+        message = np.array([xh_scaled, self.xs, (self.grab_object, 0)])
+
+     
+
+        # Send the message
         self.send_sock.sendto(message.tobytes(), ("127.0.0.1", 40002))
 
         # Receive Force feedback
@@ -144,6 +157,8 @@ class RemoteOperator:
         
         # Update previous position
         self.prev_xh = xh.copy()
+        fe*=0.5
+
         ##############################################
         if self.device_connected: #set forces only if the device is connected
             p.update_force(fe)
@@ -167,8 +182,6 @@ if __name__=="__main__":
             operator.run()
     except EndGame as e:
         print(f"Game stopped with exception: {e}")
-        if(e.error_code == 1):
-            pygame.quit()
-            sys.exit(1)
+
     finally:
         operator.close()
