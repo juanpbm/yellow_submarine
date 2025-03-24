@@ -271,7 +271,7 @@ class Submarine:
 
 
             
-            print(fe,"2")
+            # print(fe,"2")
             v_h = ((xh - self.prev_xh) / g.window_scale) / dt
             self.b_water = 0.5
             f_hydro = np.array(-self.b_water * v_h)
@@ -337,10 +337,6 @@ class Submarine:
 
         fe, v_h = self.calc_forces(xh)
 
-        # Send force the first 0 is the type of the message informing the operator that it is a force
-        msg = np.array([0, *fe], dtype=np.float32)
-        self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
-
         self.prev_xh = xh.copy()
         self.prev_vh = v_h.copy()
         # Process the forces and position to render the environment
@@ -384,9 +380,16 @@ class Submarine:
         elif(self.collision_platform==1):
             xh[1]=g.platform.topleft[1]-25
             self.damage += 0.3
+            difference=xm[1] - xh[1]  
+            wall_force = self.force_wall(difference,0.1) 
+            fe+=np.array([0,wall_force])
         elif(self.collision_platform==2):
             xh[0]=g.platform.topleft[0]-20
             self.damage += 0.3 
+            difference=xm[0]-xh[0]
+            wall_force = self.force_wall(difference) 
+            fe+=np.array([wall_force,0])
+            
 
         #Check collision with wall on the left and limit the handle position accordingly
         if ((xh[0] - 20)<g.wall.topright[0]) and ((xh[1]+25)>g.wall.topright[1]) and self.collision_wall==0:
@@ -399,9 +402,15 @@ class Submarine:
         elif(self.collision_wall==1):
             xh[1]=g.wall.topright[1]-25
             self.damage += 0.3 
+            difference=xm[1] - xh[1]  
+            wall_force = self.force_wall(difference,0.1) 
+            fe+=np.array([0,wall_force])
         elif(self.collision_wall==2):
             xh[0]=g.wall.topright[0] + 20
             self.damage += 0.3 
+            difference=xh[0] - xm[0]
+            wall_force = self.force_wall(difference) 
+            fe+=np.array([-wall_force,0])
 
         # Check collision with the different objects only while an object has not been grabbed and limit the handle position accordingly
         if (self.object_grabbed==False):
@@ -409,6 +418,10 @@ class Submarine:
             xh, self.collision_chest= self.collision_object(xh,g.chest, self.collision_chest)
             xh, self.collision_bottle= self.collision_object(xh,g.bottle, self.collision_bottle,5)
            
+        # Send force the first 0 is the type of the message informing the operator that it is a force
+        msg = np.array([0, *fe], dtype=np.float32)
+        self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
+
         g.render(pA0, pB0, pA, pB, xh, fe, xm, xs, self.init_time, self.damage)  # Render environment
         # fe = 0
         # Skip First iteration as the distance should be 0
@@ -493,6 +506,24 @@ class Submarine:
 
         return xh, collision_specific_object
 
+    def force_wall(self,difference, k=0.2):
+        if (difference<50):
+            difference=50
+        elif (difference<60):
+            difference=100
+            k=0.3
+        elif (difference<70):
+            difference=150
+            k=0.4
+
+        elif(difference<90):
+            difference=500
+            k=0.8
+        elif(difference>=90):
+            difference=1000
+            k=1
+
+        return difference*k
 
 if __name__=="__main__":
 

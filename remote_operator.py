@@ -61,7 +61,6 @@ class RemoteOperator:
         if self.device_connected:
             pA0,pB0,pA,pB,pE = p.get_device_pos() #positions of the various points of the pantograph
             pA0,pB0,pA,pB,xh = g.convert_pos(pA0,pB0,pA,pB,pE) #convert the physical positions to screen coordinates
-            print(xh)
         else:
             xh = g.haptic.center
             #set xh to the current haptic position, which is from the last frame.
