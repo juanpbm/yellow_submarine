@@ -168,7 +168,7 @@ class Submarine:
                     if elapsed_time > (duration - 0.2):
                         remaining_time = duration - elapsed_time
                         scale_factor = max(0.0, remaining_time / 0.1)  # Linear ramp down
-                        force_x *= scale_factor
+                        force_x = 0
 
                     perturbation_force[0] += force_x
 
@@ -243,6 +243,7 @@ class Submarine:
             if not hasattr(self, "prev_xh"):
                 self.prev_xh = xh.copy()
             f_wave = np.array([0, 0], dtype=np.float32)
+            f_fish = np.array([0, 0], dtype=np.float32)
             if random.random() < 0.1 and self.current_on == False:
                 self.perturbations.append(self.generate_perturbation())
             f_wave = self.get_perturbation_force(xh,g)
@@ -253,7 +254,6 @@ class Submarine:
 
             f_perturbation = -(self.mass * self.gravity - self.water_density * self.displaced_volume * self.gravity)
             f_perturbation = np.array([0, f_perturbation]) +f_hydrostatic+f_wave
-            print(f_perturbation,"1")
 
 
             fe = np.array([0, 0], dtype=np.float32)
@@ -261,9 +261,16 @@ class Submarine:
             
             haptic_rect = pygame.Rect(xh[0], xh[1], self.haptic_width, self.haptic_height)
             # TODO: FIX FORCE FISH
-            if self.collision_act>0:
+            # TODO: FIX FORCE FISH
+            if self.collision_act > 0:
                 penetration_depth = max(0, self.collision_act + 40 - haptic_rect.left)
-                fe[0] += (self.k_fish * penetration_depth/600)
+                f_fish[0] = (self.k_fish * penetration_depth/600)
+                fe += f_fish
+                # Reset collision state after applying force
+                self.collision_act = 0  # <-- Add this line
+
+
+            
             print(fe,"2")
             v_h = ((xh - self.prev_xh) / g.window_scale) / dt
             self.b_water = 0.5
@@ -341,15 +348,15 @@ class Submarine:
         
         g.render_fish()
 
-        # Check collision with fish TODO: some collisions are weird
+        # Check collision with fish
+        self.collision_act = 0  # Reset collision state every frame
         for n, f in enumerate(g.fish):
             if f == 1:              
                 # Check distance from fish to each line
                 if (g.effort_cursor.colliderect(g.fish_rect[n]) or 
                     (xh[1] >= g.fish_pos[n][1] and (np.abs(g.fish_pos[n][0] - xh[0])<50))):
-                    self.collision_act = g.fish_pos[n][0]
-                    self.damage += 0.1 #  TODO: too much damage
-                    # TODO: drop object if collision
+                    self.collision_act = g.fish_pos[n][0]  # Set collision state
+                    self.damage += 0.1
                 
         # Ensure haptic device stays within the window bounds
         xh[0] = np.clip(xh[0], 0, g.window_size[0] - self.haptic_width)
