@@ -124,8 +124,8 @@ class Submarine:
 
     def generate_perturbation(self):
      
-        section = random.randint(0, self.num_sections - 1)  
-        amplitude = random.uniform(1, 2)  
+        section = random.randint(2, self.num_sections - 1)  
+        amplitude = random.uniform(3, 4)  
         frequency = random.uniform(0.5, 2.0)  
         start_time = time.time()  
         duration = random.uniform(2.0, 3.0) 
@@ -139,40 +139,45 @@ class Submarine:
             "direction": direction,  
         }
 
-    def get_perturbation_force(self, xh,g):
-  
+    def get_perturbation_force(self, xh, g):
         perturbation_force = np.array([0.0, 0.0]) 
-
         current_time = time.time()
         new_perturbations = []
 
         for pert in self.perturbations:
             elapsed_time = current_time - pert["start_time"]
+            duration = pert["duration"]
 
-            if elapsed_time < pert["duration"]:
+            if elapsed_time < duration:
                 self.current_on = True
                 
                 y_min = pert["section"] * self.section_height
                 y_max = (pert["section"] + 1) * self.section_height
 
-                g.current_pos[1] = y_min + (y_max-y_min)/2
+                g.current_pos[1] = y_min + (y_max - y_min) / 2
                 
                 if y_min <= xh[1] <= y_max:
-                    
+                    # Calculate force magnitude
                     force_x = (
                         pert["amplitude"]
                         * math.sin(2 * math.pi * pert["frequency"] * elapsed_time)
-                        * pert["direction"]  
+                        * pert["direction"]
                     )
+
+                    # Smoothly reduce force to zero in the last 0.1 seconds
+                    if elapsed_time > (duration - 0.2):
+                        remaining_time = duration - elapsed_time
+                        scale_factor = max(0.0, remaining_time / 0.1)  # Linear ramp down
+                        force_x *= scale_factor
+
                     perturbation_force[0] += force_x
 
                 new_perturbations.append(pert)
             else:
                 self.current_on = False
-                g.current_pos[1] = 1200
+                g.current_pos[1] = 1200  # Reset position outside the screen
 
         self.perturbations = new_perturbations  
-
         return perturbation_force
     
     def Grab_object(self, grab_object):
@@ -237,13 +242,19 @@ class Submarine:
 
             if not hasattr(self, "prev_xh"):
                 self.prev_xh = xh.copy()
-
+            f_wave = np.array([0, 0], dtype=np.float32)
             if random.random() < 0.1 and self.current_on == False:
                 self.perturbations.append(self.generate_perturbation())
-            # TODO: wave seems to not be working
             f_wave = self.get_perturbation_force(xh,g)
+            depth = xh[1] / g.window_scale  # Depth in meters (y-axis increases downward)
+            f_hydrostatic = self.water_density * self.gravity * depth * self.cross_sectional_area
+            f_hydrostatic = np.array([0, f_hydrostatic])  # Apply only in the y-axis
+
+
             f_perturbation = -(self.mass * self.gravity - self.water_density * self.displaced_volume * self.gravity)
-            f_perturbation = np.array([0, f_perturbation]) + f_wave
+            f_perturbation = np.array([0, f_perturbation]) +f_hydrostatic+f_wave
+            print(f_perturbation,"1")
+
 
             fe = np.array([0, 0], dtype=np.float32)
             fe += f_perturbation 
@@ -253,29 +264,31 @@ class Submarine:
             if self.collision_act>0:
                 penetration_depth = max(0, self.collision_act + 40 - haptic_rect.left)
                 fe[0] += (self.k_fish * penetration_depth/600)
-                
+            print(fe,"2")
             v_h = ((xh - self.prev_xh) / g.window_scale) / dt
             self.b_water = 0.5
             f_hydro = np.array(-self.b_water * v_h)
+        
             fe += f_hydro
             
             k_spring = 150
             b_damping = 2
             dt = 0.01
 
-            f_vspring = k_spring * (xh-g.xc) / g.window_scale
+            #f_vspring = k_spring * (xh-g.xc) / g.window_scale
             if not hasattr(self, "prev_vh"):
                 self.prev_vh = v_h.copy()
             v_h = ((xh - self.prev_xh) / g.window_scale) / dt
 
             a_h = ((v_h - self.prev_vh) / g.window_scale) / dt
-            f_damping = b_damping * v_h
+            #f_damping = b_damping * v_h
 
             f_inertia = self.mass* a_h
+        
             if (self.object_grabbed):
                 fe += np.array([0,-9.8*(0)])
                 fe += self.object_mass * a_h
-            fe = f_vspring + f_damping + fe + f_inertia
+            fe =  fe +f_inertia
 
         # If the haptics are disabled send 0 force
         else: 
@@ -299,9 +312,9 @@ class Submarine:
             #print("message_recieved",data)
             # Rescale xm[0] from -1 to 1 to 0 to 800
             xm = data[:2]
-            # Rescale xm from -1 to 1 to 0 to 800,600
-            xm[0] = np.clip(((xm[0] + 1) / 2) * 800, 0, 800)
-            xm[1] = np.clip(((xm[1] + 1) / 2) * 600, 0, 600)
+            xm[0] = np.clip((xm[0] + ((g.submarine_pos[0] + 177) - (g.window_size[0]/2))), -100, g.window_size[0] + 100)
+            xm[1] = np.clip((xm[1] * 1.3), 0, g.window_size[1] + 75)
+            xm = np.array(xm, dtype=int)
  
             xm = np.array(xm, dtype=int)
             xs = np.array(data[2:4], dtype=int)
@@ -390,7 +403,7 @@ class Submarine:
             xh, self.collision_bottle= self.collision_object(xh,g.bottle, self.collision_bottle,5)
            
         g.render(pA0, pB0, pA, pB, xh, fe, xm, xs, self.init_time, self.damage)  # Render environment
-        
+        # fe = 0
         # Skip First iteration as the distance should be 0
         if not self.first:
             self.first = True
