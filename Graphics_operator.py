@@ -8,7 +8,7 @@ class Graphics:
     def __init__(self,device_connected,window_size=(700,500)):
         self.device_connected = device_connected
         
-        #initialize pygame window
+        # Initialize pygame window
         self.window_size = window_size
         os.environ['SDL_VIDEO_WINDOW_POS'] = "830,150"
 
@@ -17,25 +17,25 @@ class Graphics:
         pygame.display.set_caption('Operator')
 
         self.screenHaptics = pygame.Surface(self.window_size)
-        ##add nice icon from https://www.flaticon.com/authors/vectors-market
+        # Add nice icon from https://www.flaticon.com/authors/vectors-market
         self.icon = pygame.image.load('imgs/robot.png')
         pygame.display.set_icon(self.icon)
 
-        ##add text on top to debugToggle the timing and forces
+        # Add text on top to debugToggle the timing and forces
         self.font = pygame.font.Font('freesansbold.ttf', 18)
 
         pygame.mouse.set_visible(True)     ##Hide cursor by default. 'm' toggles it
          
-        ##set up the on-screen debugToggle
+        # set up the on-screen debugToggle
         self.text = self.font.render('Operator', True, (0, 0, 0),(255, 255, 255))
         self.textRect = self.text.get_rect()
         self.textRect.topleft = (10, 10)
 
-        ##initialize "real-time" clock
+        # Initialize "real-time" clock
         self.clock = pygame.time.Clock()
         self.FPS = 100   #in Hertz
 
-        ##define some colors
+        # Define some colors
         self.cWhite = (255,255,255)
         self.cDarkblue = (36,90,190)
         self.cLightblue = (0,176,240)
@@ -53,7 +53,7 @@ class Graphics:
         self.effort_cursor  = pygame.Rect(*self.haptic.center, 0, 0).inflate(self.haptic_width, self.haptic_height) 
         self.colorHaptic = self.cOrange ##color of the wall
 
-        ####Pseudo-haptics dynamic parameters, k/b needs to be <1
+        # Pseudo-haptics dynamic parameters, k/b needs to be <1
         self.sim_k = 0.5 #0.1#0.5       ##Stiffness between cursor and haptic display
         self.sim_b = 0.8 #1.5#0.8       ##Viscous of the pseudohaptic display
         

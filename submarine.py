@@ -37,13 +37,6 @@ class Submarine:
         self.recv_sock.bind(("127.0.0.1", 40002))
         self.recv_sock.setblocking(False)
         
-        # TODO: what is this? 
-        self.pAl = [0,0]
-        self.pBl = [0,0]
-        self.pEl = [0,0]
-        
-        self.collision_act = 0
-        
         # Current
         self.current_on = False
         
@@ -56,6 +49,7 @@ class Submarine:
         self.fish_mode = 1
         
         self.xc = self.graphics.haptic.center
+        self.collision_act = 0
 
         # Objects interaction
         self.object_grabbed = False
@@ -63,14 +57,15 @@ class Submarine:
         self.object_mass = 0
         self.grabbed_object = ""
 
-        self.collision_platform= 0
-        self.collision_wall= 0
+        self.collision_platform = 0
+        self.collision_wall = 0
         self.collision_anchor = 0
         self.collision_chest = 0
-        self.collision_bottle= 0
+        self.collision_bottle = 0
 
-        # TODO: what is this
+        # Haptic dim anf mass 
         self.mass=0.5
+        # TODO: use the ones from fro graphics 
         self.haptic_width = 48
         self.haptic_height = 48
         self.haptic_length = 48
@@ -100,7 +95,6 @@ class Submarine:
 
         self.k_fish = 50 
 
-        
         # Wait for at least one message from the master. Only continue once something is received.
         print("Waiting for operator communication")
         i = 0
@@ -131,7 +125,7 @@ class Submarine:
     def generate_perturbation(self):
      
         section = random.randint(0, self.num_sections - 1)  
-        amplitude = random.uniform(0.1, 0.6)  
+        amplitude = random.uniform(1, 2)  
         frequency = random.uniform(0.5, 2.0)  
         start_time = time.time()  
         duration = random.uniform(2.0, 3.0) 
@@ -283,7 +277,7 @@ class Submarine:
                 fe += self.object_mass * a_h
             fe = f_vspring + f_damping + fe + f_inertia
 
-        # if the haptics are disabled send 0 force
+        # If the haptics are disabled send 0 force
         else: 
             fe = np.array([0,0], dtype=np.float32)
 
@@ -294,7 +288,7 @@ class Submarine:
         g = self.graphics
         g.get_events()
         xs = np.array(g.submarine_pos)
-        xh = np.array(g.haptic.center, dtype=np.float64) #make sure fe is a numpy array
+        xh = np.array(g.haptic.center, dtype=np.float64) # Make sure fe is a numpy array
         g.erase_screen()
         
         # Receive and process messages
@@ -330,7 +324,7 @@ class Submarine:
         self.prev_xh = xh.copy()
         self.prev_vh = v_h.copy()
         # Process the forces and position to render the environment
-        xh = g.sim_forces(xh,fe,xm,mouse_k=0.5,mouse_b=0.8) #simulate forces with mouse haptics
+        xh = g.sim_forces(xh,fe,xm,mouse_k=0.5,mouse_b=0.8) # Simulate forces with mouse haptics
         
         g.render_fish()
 
@@ -341,7 +335,7 @@ class Submarine:
                 if (g.effort_cursor.colliderect(g.fish_rect[n]) or 
                     (xh[1] >= g.fish_pos[n][1] and (np.abs(g.fish_pos[n][0] - xh[0])<50))):
                     self.collision_act = g.fish_pos[n][0]
-                    self.damage += 1.0 #  TODO: too much damage
+                    self.damage += 0.1 #  TODO: too much damage
                     # TODO: drop object if collision
                 
         # Ensure haptic device stays within the window bounds
@@ -349,7 +343,7 @@ class Submarine:
         xh[1] = np.clip(xh[1], 0, g.window_size[1] - self.haptic_height)
         
         pos_phys = g.inv_convert_pos(xh)
-        pA0,pB0,pA,pB,pE = p.derive_device_pos(pos_phys) #derive the pantograph joint positions given some endpoint position
+        pA0,pB0,pA,pB,pE = p.derive_device_pos(pos_phys) # Derive the pantograph joint positions given some endpoint position
 
         # Scale the physics results for submarine size
         pB0 = pA0
@@ -359,7 +353,7 @@ class Submarine:
 
         pA0, pB0, pA, pB, xh = g.convert_pos(pA0, pB0, pA, pB, pE)
 
-        #Check collision with platform on the right and limit the handle position accordingly
+        # Check collision with platform on the right and limit the handle position accordingly
         if ((xh[0]+ 20)>g.platform.topleft[0]) and ((xh[1]+25)>g.platform.topleft[1]) and (self.collision_platform==0):
             if ((xh[0]+ 20)-g.platform.topleft[0]) > ((xh[1]+25)-g.platform.topleft[1]):
                 self.collision_platform=1
@@ -389,7 +383,7 @@ class Submarine:
             xh[0]=g.wall.topright[0] + 20
             self.damage += 0.3 
 
-        #Check collision with the different objects only while an object has not been grabbed and limit the handle position accordingly
+        # Check collision with the different objects only while an object has not been grabbed and limit the handle position accordingly
         if (self.object_grabbed==False):
             xh, self.collision_anchor= self.collision_object(xh,g.anchor, self.collision_anchor)
             xh, self.collision_chest= self.collision_object(xh,g.chest, self.collision_chest)

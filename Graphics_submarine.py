@@ -10,16 +10,17 @@ class Graphics:
         self.device_connected = device_connected
         self.max_time = max_time
         #initialize pygame window
-        self.window_size = window_size #default (600,400)
-        os.environ['SDL_VIDEO_WINDOW_POS'] = "20,100"
+        self.window_size = window_size #default (800, 600)
+        os.environ['SDL_VIDEO_WINDOW_POS'] = "20,100" # Where in the screen the window pops up
         pygame.init()
-        self.window = pygame.display.set_mode((window_size[0], window_size[1]))   ##twice 600x400 for haptic and VR
+        self.window = pygame.display.set_mode((window_size[0], window_size[1]))
         pygame.display.set_caption('Yellow Submarine')
 
         self.screenHaptics = pygame.Surface(self.window_size)
         self.xc = self.screenHaptics.get_rect().centerx
         self.yc =self.screenHaptics.get_rect().centery
-        ##add nice icon from https://www.flaticon.com/authors/vectors-market
+
+        ##add nice icon from https://www.cleanpng.com/png-yellow-submarine-clip-art-submarine-biomass-vector-1902493/
         self.icon = pygame.image.load('imgs/yellow_submarine_left.png')
         pygame.display.set_icon(self.icon)
 
@@ -37,7 +38,7 @@ class Graphics:
         self.clock = pygame.time.Clock()
         self.FPS = 100   #in Hertz
 
-        ##define some colors
+        # Define some colors
         self.cWhite = (255,255,255)
         self.cDarkblue = (36,90,190)
         self.cLightblue = (0,176,240)
@@ -55,6 +56,7 @@ class Graphics:
         self.dBrown = (92, 64, 51)
         self.Sand = (198, 166, 100)
         
+        # Image taken from https://www.cleanpng.com/png-industrial-robotic-arm-in-action-8194578/
         self.hhandle = pygame.image.load('imgs/hand.png') 
         
         self.haptic_width = 48
@@ -76,12 +78,12 @@ class Graphics:
         # initial position
         self.window_scale = 3000 #2500 #pixels per meter
         self.submarine_pos = (int(self.window_size[0]/2.0 - 80), 10)
-        self.device_origin = (int(self.window_size[0]/2.0 + 0.038/2.0*self.window_scale),0)
+        self.device_origin = (int(self.window_size[0]/2.0), 110)
         
-        # Targets
-        self.anchor_img = pygame.image.load('imgs/anchor.png')
-        self.chest_img = pygame.image.load('imgs/chest.png')
-        self.bottle_img = pygame.image.load('imgs/bottle.png')
+        # Targets (Images taken from the links next to each image)
+        self.anchor_img = pygame.image.load('imgs/anchor.png') # https://www.cleanpng.com/png-anchor-anchor-rope-boat-water-7781743/
+        self.chest_img = pygame.image.load('imgs/chest.png') # https://www.cleanpng.com/png-icon-wooden-chest-hasp-keyhole-lid-brown-wooden-ch-7956299/
+        self.bottle_img = pygame.image.load('imgs/bottle.png') # https://www.cleanpng.com/png-red-ribbon-clean-minimalist-image-of-a-bottle-with-7945288/
         self.anchor = self.anchor_img.get_rect(topleft=(500, 490))
         self.chest = self.chest_img.get_rect(topleft=(50, 255))
         self.bottle = self.bottle_img.get_rect(topleft=(200, 542))
@@ -269,7 +271,6 @@ class Graphics:
         self.submarine_pos = tuple(pS)
         self.device_origin = (pS[0] + 75, pS[1] + 90)
         self.screenHaptics.blit(self.submarine_dir, self.submarine_pos)
-
 
         # Display time
         remaining_time = max(0, self.max_time - (time.time() - st))
