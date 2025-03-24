@@ -369,8 +369,10 @@ class Submarine:
             self.collision_platform=0
         elif(self.collision_platform==1):
             xh[1]=g.platform.topleft[1]-25
+            self.damage += 0.1 
         elif(self.collision_platform==2):
             xh[0]=g.platform.topleft[0]-20
+            self.damage += 0.1 
 
         #Check collision with wall on the left and limit the handle position accordingly
         if ((xh[0] - 20)<g.wall.topright[0]) and ((xh[1]+25)>g.wall.topright[1]) and self.collision_wall==0:
@@ -382,8 +384,10 @@ class Submarine:
             self.collision_wall=0
         elif(self.collision_wall==1):
             xh[1]=g.wall.topright[1]-25
+            self.damage += 0.3 
         elif(self.collision_wall==2):
             xh[0]=g.wall.topright[0] + 20
+            self.damage += 0.3 
 
         #Check collision with the different objects only while an object has not been grabbed and limit the handle position accordingly
         if (self.object_grabbed==False):
