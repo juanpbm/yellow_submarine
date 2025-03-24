@@ -324,8 +324,7 @@ class Submarine:
         fe, v_h = self.calc_forces(xh)
 
         # Send force the first 0 is the type of the message informing the operator that it is a force
-        msg = np.array([0, *fe], dtype=np.float32)
-        self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
+        
 
         self.prev_xh = xh.copy()
         self.prev_vh = v_h.copy()
@@ -341,7 +340,7 @@ class Submarine:
                 if (g.effort_cursor.colliderect(g.fish_rect[n]) or 
                     (xh[1] >= g.fish_pos[n][1] and (np.abs(g.fish_pos[n][0] - xh[0])<50))):
                     self.collision_act = g.fish_pos[n][0]
-                    self.damage += 1.0 #  TODO: too much damage
+                    # self.damage += 1.0 #  TODO: too much damage
                     # TODO: drop object if collision
                 
         # Ensure haptic device stays within the window bounds
@@ -369,10 +368,18 @@ class Submarine:
             self.collision_platform=0
         elif(self.collision_platform==1):
             xh[1]=g.platform.topleft[1]-25
-            self.damage += 0.1 
+            # self.damage += 0.1 
         elif(self.collision_platform==2):
             xh[0]=g.platform.topleft[0]-20
-            self.damage += 0.1 
+            difference= xm[0] - xh[0]
+            if(difference<50):
+                difference=0
+
+            elif(difference>=50):
+                difference=300
+            k=0.05
+            fe+=np.array([difference*k,0.0])
+            # self.damage += 0.1 
 
         #Check collision with wall on the left and limit the handle position accordingly
         if ((xh[0] - 20)<g.wall.topright[0]) and ((xh[1]+25)>g.wall.topright[1]) and self.collision_wall==0:
@@ -384,17 +391,19 @@ class Submarine:
             self.collision_wall=0
         elif(self.collision_wall==1):
             xh[1]=g.wall.topright[1]-25
-            self.damage += 0.3 
+            # self.damage += 0.3 
         elif(self.collision_wall==2):
             xh[0]=g.wall.topright[0] + 20
-            self.damage += 0.3 
+            # self.damage += 0.3 
 
         #Check collision with the different objects only while an object has not been grabbed and limit the handle position accordingly
         if (self.object_grabbed==False):
             xh, self.collision_anchor= self.collision_object(xh,g.anchor, self.collision_anchor)
             xh, self.collision_chest= self.collision_object(xh,g.chest, self.collision_chest)
             xh, self.collision_bottle= self.collision_object(xh,g.bottle, self.collision_bottle,5)
-           
+
+        msg = np.array([0, *fe], dtype=np.float32)
+        self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
         g.render(pA0, pB0, pA, pB, xh, fe, xm, xs, self.init_time, self.damage)  # Render environment
         
         # Skip First iteration as the distance should be 0

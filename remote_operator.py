@@ -157,6 +157,7 @@ class RemoteOperator:
         self.prev_xh = xh.copy()
         fe *= 0.5
 
+        print(fe)
         ##############################################
         if self.device_connected: #set forces only if the device is connected
             p.update_force(fe)
