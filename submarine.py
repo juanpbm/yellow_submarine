@@ -26,7 +26,7 @@ class EndGame(Exception):
 
 class Submarine:
     def __init__(self, render_haptics = True):
-        self.max_time = 2 * 60 # "T_minutes" * 60s = T_seconds 
+        self.max_time = 1 * 60 # "T_minutes" * 60s = T_seconds 
         self.physics = Physics(hardware_version=0, connect_device=False) #setup physics class. Returns a boolean indicating if a device is connected
         self.graphics = Graphics(False, num_fish=2, max_time=self.max_time) #setup class for drawing and graphics.
         self.render_haptics = render_haptics
@@ -238,8 +238,6 @@ class Submarine:
 
     def calc_forces(self, xh):
         g = self.graphics
-
-
         dt = 0.01
 
         if not hasattr(self, "prev_xh"):
@@ -290,6 +288,55 @@ class Submarine:
         self.prev_vh = v_h.copy()
         return fe
 
+    def collision_object(self,xh, object, collision_specific_object, offset=0 ):
+        #TODO: add damage for colliding with walls, drop object.
+        # Check if the limits of the handle respect to xh collision with the object
+        if (((xh[0]+ 20)>object.topleft[0]) and ((xh[0]- 20)<object.topright[0]) ) and ((xh[1]+12 + offset)>object.topleft[1]) and (collision_specific_object==0):
+                # Check if the collision is from top, left or right
+                if (((xh[0]+ 20)-object.topleft[0]) > ((xh[1]+12 - offset)-object.topleft[1])):
+                    # This condition only happens when xh is further away from left side than the top, meaning that when there was a collision was from the top or right side
+                    if ( -((xh[0]- 20)-object.topright[0]))  > ((xh[1]+12 + offset)-object.topleft[1]):
+                         # Collision from top
+                        collision_specific_object=1
+                    else:
+                        # Collision from right side
+                        collision_specific_object=3
+                else:
+                    # This condition only happens when xh is further away from top than the left side, meaning that when there was a collision was from the left side
+                    collision_specific_object=2  
+        # Check if the handle no longer collides with the object
+        elif ( ((xh[1]+12 + offset)<(object.topleft[1])) or ((xh[0] + 20)<(object.topleft[0])) or ((xh[0] - 20)>(object.topright[0]))) and (collision_specific_object!=0) :
+            # No collision (default)
+            collision_specific_object=0
+        # Adjust the handle accordingly
+        elif(collision_specific_object==1):
+            xh[1]=object.topleft[1]-12 - offset
+        elif(collision_specific_object==2):
+            xh[0]=object.topleft[0]-20
+        elif(collision_specific_object==3):
+            xh[0]=object.topright[0] + 20
+
+        return xh, collision_specific_object
+
+    def force_wall(self,difference, k=0.2):
+        if (difference<50):
+            difference=50
+        elif (difference<60):
+            difference=100
+            k=0.3
+        elif (difference<70):
+            difference=150
+            k=0.4
+
+        elif(difference<90):
+            difference=500
+            k=0.8
+        elif(difference>=90):
+            difference=1000
+            k=1
+
+        return difference*k
+    
     def run(self):
         p = self.physics
         g = self.graphics
@@ -316,7 +363,6 @@ class Submarine:
             
         # If there is a timeout the connection with the operator has been lost
         except socket.timeout:
-            pygame.quit()
             raise EndGame("Connection lost", 1)
         
         # Grabbing Objects
@@ -376,7 +422,6 @@ class Submarine:
             wall_force = self.force_wall(difference) 
             fe+=np.array([wall_force,0])
             
-
         #Check collision with wall on the left and limit the handle position accordingly
         if ((xh[0] - 20)<g.wall.topright[0]) and ((xh[1]+25)>g.wall.topright[1]) and self.collision_wall==0:
             if ( - ((xh[0] - 20)-g.wall.topright[0]) > ((xh[1]+25)-g.wall.topright[1])):
@@ -448,11 +493,12 @@ class Submarine:
             start_time = time.time()
             while True:
                 try:
-                    self.send_sock.settimeout(0.5)
+                    self.recv_sock.settimeout(2)
                     recv_data, _ = self.recv_sock.recvfrom(1024)
-                    data = np.array(np.frombuffer(recv_data, dtype=bool))
-                    if(data[0] == 1):
-                        play_again = data[1]
+                    data = np.array(np.frombuffer(recv_data, dtype=int))
+                    print(data)
+                    if(data[0] == 1500):
+                        play_again = bool(data[1])
                         break
                 except :
                     # add a 2min time-out to prevent an infinite loop.
@@ -466,55 +512,6 @@ class Submarine:
         self.send_sock.close()
         self.recv_sock.close()
         return play_again
-    
-    def collision_object(self,xh, object, collision_specific_object, offset=0 ):
-        #TODO: add damage for colliding with walls, drop object.
-        # Check if the limits of the handle respect to xh collision with the object
-        if (((xh[0]+ 20)>object.topleft[0]) and ((xh[0]- 20)<object.topright[0]) ) and ((xh[1]+12 + offset)>object.topleft[1]) and (collision_specific_object==0):
-                # Check if the collision is from top, left or right
-                if (((xh[0]+ 20)-object.topleft[0]) > ((xh[1]+12 - offset)-object.topleft[1])):
-                    # This condition only happens when xh is further away from left side than the top, meaning that when there was a collision was from the top or right side
-                    if ( -((xh[0]- 20)-object.topright[0]))  > ((xh[1]+12 + offset)-object.topleft[1]):
-                         # Collision from top
-                        collision_specific_object=1
-                    else:
-                        # Collision from right side
-                        collision_specific_object=3
-                else:
-                    # This condition only happens when xh is further away from top than the left side, meaning that when there was a collision was from the left side
-                    collision_specific_object=2  
-        # Check if the handle no longer collides with the object
-        elif ( ((xh[1]+12 + offset)<(object.topleft[1])) or ((xh[0] + 20)<(object.topleft[0])) or ((xh[0] - 20)>(object.topright[0]))) and (collision_specific_object!=0) :
-            # No collision (default)
-            collision_specific_object=0
-        # Adjust the handle accordingly
-        elif(collision_specific_object==1):
-            xh[1]=object.topleft[1]-12 - offset
-        elif(collision_specific_object==2):
-            xh[0]=object.topleft[0]-20
-        elif(collision_specific_object==3):
-            xh[0]=object.topright[0] + 20
-
-        return xh, collision_specific_object
-
-    def force_wall(self,difference, k=0.2):
-        if (difference<50):
-            difference=50
-        elif (difference<60):
-            difference=100
-            k=0.3
-        elif (difference<70):
-            difference=150
-            k=0.4
-
-        elif(difference<90):
-            difference=500
-            k=0.8
-        elif(difference>=90):
-            difference=1000
-            k=1
-
-        return difference*k
 
 if __name__=="__main__":
 
@@ -538,7 +535,7 @@ if __name__=="__main__":
                 submarine.run()
         except EndGame as e:
             print(f"Game stopped with exception: {e}")
-            play_again = submarine.close(True)
+            play_again = submarine.close(e.error_code == 0)
             submarine = None
             if(play_again == False):
                 pygame.quit()
