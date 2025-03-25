@@ -65,6 +65,8 @@ class Submarine:
 
         # Haptic dim anf mass 
         self.mass=0.5
+        self.prev_vh = 0
+
         # TODO: use the ones from fro graphics 
         self.haptic_width = 48
         self.haptic_height = 48
@@ -89,7 +91,7 @@ class Submarine:
 
         # Perturbation parameters
         self.window_height = 600  
-        self.num_sections = 10  
+        self.num_sections = 5
         self.section_height = self.window_height // self.num_sections  
         self.perturbations = []  # List to store active perturbations
 
@@ -154,7 +156,7 @@ class Submarine:
                 y_min = pert["section"] * self.section_height
                 y_max = (pert["section"] + 1) * self.section_height
 
-                g.current_pos[1] = y_min + (y_max - y_min) / 2
+                g.current_pos[1] = y_min
                 
                 if y_min <= xh[1] <= y_max:
                     # Calculate force magnitude
@@ -190,17 +192,17 @@ class Submarine:
                         g.anchor.topleft=(cursor.bottomleft[0],cursor.bottomleft[1]-12)
                         self.object_grabbed = True
                         self.grabbed_object = "anchor"
-                        self.object_mass = 10.0
+                        self.object_mass = 1.0
                 elif (cursor.colliderect(g.chest))  and  (not cursor.colliderect(g.anchor)) and ( not cursor.colliderect(g.bottle)) and "chest" not in self.objects_in_target:
                         g.chest.topleft=(cursor.bottomleft[0],cursor.bottomleft[1]-12)
                         self.object_grabbed = True
                         self.grabbed_object = "chest"
-                        self.object_mass = 5.0
+                        self.object_mass = 0.5
                 elif (cursor.colliderect(g.bottle))  and  (not cursor.colliderect(g.chest)) and ( not cursor.colliderect(g.anchor)) and "bottle" not in self.objects_in_target:
                         g.bottle.topleft=(cursor.bottomleft[0],cursor.bottomleft[1]-10)
                         self.object_grabbed = True
                         self.grabbed_object = "bottle"
-                        self.object_mass = 1.0
+                        self.object_mass = 0.1
                 elif not ((cursor.colliderect(g.chest)) or (cursor.colliderect(g.anchor)) or (cursor.colliderect(g.anchor))):
                     self.drop_object()
             else:
@@ -253,7 +255,7 @@ class Submarine:
 
 
         f_perturbation = -(self.mass * self.gravity - self.water_density * self.displaced_volume * self.gravity)
-        f_perturbation = np.array([0, f_perturbation]) +f_hydrostatic+f_wave
+        f_perturbation = np.array([0, f_perturbation]) + f_hydrostatic + f_wave
 
 
         fe = np.array([0, 0], dtype=np.float32)
@@ -275,25 +277,15 @@ class Submarine:
         f_hydro = np.array(-self.b_water * v_h)
     
         fe += f_hydro
-        
-        k_spring = 150
-        b_damping = 2
-        dt = 0.01
-
-        #f_vspring = k_spring * (xh-g.xc) / g.window_scale
-        if not hasattr(self, "prev_vh"):
-            self.prev_vh = v_h.copy()
-        v_h = ((xh - self.prev_xh) / g.window_scale) / dt
 
         a_h = ((v_h - self.prev_vh) / g.window_scale) / dt
-        f_damping = b_damping * v_h
 
         f_inertia = self.mass* a_h
-    
+        object_inertia = np.array([0.0,0.0], dtype=np.float32)
         if (self.object_grabbed):
-            fe += np.array([0,-9.8*(0)])
-            fe += self.object_mass * a_h
-        fe = fe + f_inertia + f_damping
+            object_inertia += np.array([0.0, -9.8*(self.object_mass)])
+            object_inertia += self.object_mass * a_h
+        fe = fe + f_inertia + object_inertia
         
         self.prev_vh = v_h.copy()
         return fe
@@ -469,8 +461,8 @@ class Submarine:
                     continue
 
         # Close used resources
-        self.graphics.close()
         self.physics.close()
+        self.graphics.close()
         self.send_sock.close()
         self.recv_sock.close()
         return play_again
@@ -547,8 +539,9 @@ if __name__=="__main__":
         except EndGame as e:
             print(f"Game stopped with exception: {e}")
             play_again = submarine.close((e.error_code != 1))
-            submarine = None
             if(play_again == False):
+                submarine.close(False)
+                submarine = None
                 pygame.quit()
                 sys.exit(1)
         except Exception as e:

@@ -143,7 +143,6 @@ class RemoteOperator:
                 self.grab_object = 0
 
         except socket.timeout:
-            pygame.quit()
             raise EndGame("Connection lost", 1)
 
         # Update previous position
@@ -161,8 +160,8 @@ class RemoteOperator:
         g.render(pA0,pB0,pA,pB,xh,fe,xm)
         
     def close(self):
-        self.graphics.close()
         self.physics.close()
+        self.graphics.close()
         self.send_sock.close()
         self.recv_sock.close()
 
