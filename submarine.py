@@ -237,71 +237,66 @@ class Submarine:
     def calc_forces(self, xh):
         g = self.graphics
 
-        if self.render_haptics:
-            dt = 0.01
 
-            if not hasattr(self, "prev_xh"):
-                self.prev_xh = xh.copy()
-            f_wave = np.array([0, 0], dtype=np.float32)
-            f_fish = np.array([0, 0], dtype=np.float32)
-            if random.random() < 0.1 and self.current_on == False:
-                self.perturbations.append(self.generate_perturbation())
-            f_wave = self.get_perturbation_force(xh,g)
-            depth = xh[1] / g.window_scale  # Depth in meters (y-axis increases downward)
-            f_hydrostatic = self.water_density * self.gravity * depth * self.cross_sectional_area
-            f_hydrostatic = np.array([0, f_hydrostatic])  # Apply only in the y-axis
+        dt = 0.01
 
-
-            f_perturbation = -(self.mass * self.gravity - self.water_density * self.displaced_volume * self.gravity)
-            f_perturbation = np.array([0, f_perturbation]) +f_hydrostatic+f_wave
+        if not hasattr(self, "prev_xh"):
+            self.prev_xh = xh.copy()
+        f_wave = np.array([0, 0], dtype=np.float32)
+        f_fish = np.array([0, 0], dtype=np.float32)
+        if random.random() < 0.1 and self.current_on == False:
+            self.perturbations.append(self.generate_perturbation())
+        f_wave = self.get_perturbation_force(xh,g)
+        depth = xh[1] / g.window_scale  # Depth in meters (y-axis increases downward)
+        f_hydrostatic = self.water_density * self.gravity * depth * self.cross_sectional_area
+        f_hydrostatic = np.array([0, f_hydrostatic])  # Apply only in the y-axis
 
 
-            fe = np.array([0, 0], dtype=np.float32)
-            fe += f_perturbation 
-            
-            haptic_rect = pygame.Rect(xh[0], xh[1], self.haptic_width, self.haptic_height)
-            # TODO: FIX FORCE FISH
-            # TODO: FIX FORCE FISH
-            if self.collision_act > 0:
-                penetration_depth = max(0, self.collision_act + 40 - haptic_rect.left)
-                f_fish[0] = (self.k_fish * penetration_depth/600)
-                fe += f_fish
-                # Reset collision state after applying force
-                self.collision_act = 0  # <-- Add this line
+        f_perturbation = -(self.mass * self.gravity - self.water_density * self.displaced_volume * self.gravity)
+        f_perturbation = np.array([0, f_perturbation]) +f_hydrostatic+f_wave
 
 
-            
-            # print(fe,"2")
-            v_h = ((xh - self.prev_xh) / g.window_scale) / dt
-            self.b_water = 0.5
-            f_hydro = np.array(-self.b_water * v_h)
+        fe = np.array([0, 0], dtype=np.float32)
+        fe += f_perturbation 
         
-            fe += f_hydro
-            
-            k_spring = 150
-            b_damping = 2
-            dt = 0.01
+        haptic_rect = pygame.Rect(xh[0], xh[1], self.haptic_width, self.haptic_height)
+        # TODO: FIX FORCE FISH
+        # TODO: FIX FORCE FISH
+        if self.collision_act > 0:
+            penetration_depth = max(0, self.collision_act + 40 - haptic_rect.left)
+            f_fish[0] = (self.k_fish * penetration_depth/600)
+            fe += f_fish
+            # Reset collision state after applying force
+            self.collision_act = 0  # <-- Add this line
 
-            #f_vspring = k_spring * (xh-g.xc) / g.window_scale
-            if not hasattr(self, "prev_vh"):
-                self.prev_vh = v_h.copy()
-            v_h = ((xh - self.prev_xh) / g.window_scale) / dt
-
-            a_h = ((v_h - self.prev_vh) / g.window_scale) / dt
-            #f_damping = b_damping * v_h
-
-            f_inertia = self.mass* a_h
+        # print(fe,"2")
+        v_h = ((xh - self.prev_xh) / g.window_scale) / dt
+        self.b_water = 0.5
+        f_hydro = np.array(-self.b_water * v_h)
+    
+        fe += f_hydro
         
-            if (self.object_grabbed):
-                fe += np.array([0,-9.8*(0)])
-                fe += self.object_mass * a_h
-            fe =  fe +f_inertia
+        k_spring = 150
+        b_damping = 2
+        dt = 0.01
 
-        # If the haptics are disabled send 0 force
-        else: 
-            fe = np.array([0,0], dtype=np.float32)
+        #f_vspring = k_spring * (xh-g.xc) / g.window_scale
+        if not hasattr(self, "prev_vh"):
+            self.prev_vh = v_h.copy()
+        v_h = ((xh - self.prev_xh) / g.window_scale) / dt
 
-        return fe, v_h
+        a_h = ((v_h - self.prev_vh) / g.window_scale) / dt
+        f_damping = b_damping * v_h
+
+        f_inertia = self.mass* a_h
+    
+        if (self.object_grabbed):
+            fe += np.array([0,-9.8*(0)])
+            fe += self.object_mass * a_h
+        fe = fe + f_inertia + f_damping
+        
+        self.prev_vh = v_h.copy()
+        return fe
 
     def run(self):
         p = self.physics
@@ -335,10 +330,9 @@ class Submarine:
         # Grabbing Objects
         self.Grab_object(grab_object)
 
-        fe, v_h = self.calc_forces(xh)
-
+        fe = self.calc_forces(xh)
         self.prev_xh = xh.copy()
-        self.prev_vh = v_h.copy()
+
         # Process the forces and position to render the environment
         xh = g.sim_forces(xh,fe,xm,mouse_k=0.5,mouse_b=0.8) # Simulate forces with mouse haptics
         
@@ -419,7 +413,12 @@ class Submarine:
             xh, self.collision_bottle= self.collision_object(xh,g.bottle, self.collision_bottle,5)
            
         # Send force the first 0 is the type of the message informing the operator that it is a force
-        msg = np.array([0, *fe], dtype=np.float32)
+        if self.render_haptics:
+            msg = np.array([0, *fe], dtype=np.float32)
+        else: 
+            msg = np.array([0, 0, 0], dtype=np.float32)
+
+
         self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
 
         g.render(pA0, pB0, pA, pB, xh, fe, xm, xs, self.init_time, self.damage)  # Render environment
@@ -528,13 +527,13 @@ class Submarine:
 if __name__=="__main__":
 
     try:
-        render_haptics = sys.argv[1].lower() == "true"
-    except:
-        render_haptics = True
-    try:
-        name = sys.argv[2]
+        name = sys.argv[1]
     except:
         name = "unknown"
+    try:
+        render_haptics = sys.argv[2].lower() == "true"
+    except:
+        render_haptics = True
         
     play_again = True
     with open("results.txt", "a") as file:

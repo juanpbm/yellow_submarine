@@ -13,6 +13,12 @@ class Graphics:
         os.environ['SDL_VIDEO_WINDOW_POS'] = "830,150"
 
         pygame.init()
+
+        # Add music
+        pygame.mixer.init()
+        pygame.mixer.music.load("imgs/neon-gaming-128925.mp3")
+        pygame.mixer.music.play(-1)
+
         self.window = pygame.display.set_mode((window_size[0], window_size[1]))   ##twice 600x400 for haptic and VR
         pygame.display.set_caption('Operator')
 
@@ -286,5 +292,6 @@ class Graphics:
         return play_again
 
     def close(self):
+        pygame.mixer.music.stop()
         pygame.display.quit()
         pygame.quit()
