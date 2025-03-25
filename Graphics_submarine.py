@@ -84,9 +84,9 @@ class Graphics:
         self.anchor_img = pygame.image.load('imgs/anchor.png') # https://www.cleanpng.com/png-anchor-anchor-rope-boat-water-7781743/
         self.chest_img = pygame.image.load('imgs/chest.png') # https://www.cleanpng.com/png-icon-wooden-chest-hasp-keyhole-lid-brown-wooden-ch-7956299/
         self.bottle_img = pygame.image.load('imgs/bottle.png') # https://www.cleanpng.com/png-red-ribbon-clean-minimalist-image-of-a-bottle-with-7945288/
-        self.anchor = self.anchor_img.get_rect(topleft=(500, 490))
-        self.chest = self.chest_img.get_rect(topleft=(50, 255))
-        self.bottle = self.bottle_img.get_rect(topleft=(200, 542))
+        self.anchor = self.anchor_img.get_rect(topleft=(500, 510))
+        self.chest = self.chest_img.get_rect(topleft=(50, 263))
+        self.bottle = self.bottle_img.get_rect(topleft=(200, 555))
 
         # Background elements
         self.wall = pygame.Rect(0, 300, 185, 600)
@@ -319,7 +319,6 @@ class Graphics:
         for n, f in enumerate(self.fish):
             if(f == 1):
                 self.screenHaptics.blit(self.fish_dir[n], self.fish_pos[n])
-                
                 
                 if self.fish_pos[n][0] >= 550 and self.fish_mode[n] == 1:
                     self.fish_mode[n] = -1
