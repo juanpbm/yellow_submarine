@@ -538,14 +538,12 @@ if __name__=="__main__":
                 submarine.run()
         except EndGame as e:
             print(f"Game stopped with exception: {e}")
-            play_again = submarine.close((e.error_code != 1))
+            play_again = submarine.close(True)
+            submarine = None
             if(play_again == False):
-                submarine.close(False)
-                submarine = None
                 pygame.quit()
                 sys.exit(1)
         except Exception as e:
             print("Unhandled exception occurred:")
-            play_again = submarine.close(False)
             traceback.print_exc()
             break
