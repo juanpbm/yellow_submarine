@@ -54,7 +54,7 @@ class RemoteOperator:
         p = self.physics #assign these to shorthand variables for easier use in this function
         g = self.graphics
         #get input events for both keyboard and mouse
-        keyups, xm, keypressed, mouse_pressed = g.get_events()
+        keyups, xm, keypressed, keydowns = g.get_events()
         #  - keyups: list of unicode numbers for keys on the keyboard that were released this cycle
         #  - pm: coordinates of the mouse on the graphics screen this cycle (x,y)      
         #get the state of the device, or otherwise simulate it if no device is connected (using the mouse position)
@@ -122,7 +122,7 @@ class RemoteOperator:
                 # Show game over screen with received metrics
                 play_again = self.graphics.show_exit_screen(passed, final_time, path_length, damage)
                 # send play again message to submarine
-                snd_msg = np.array([1, play_again], dtype=bool)
+                snd_msg = np.array([1500, play_again], dtype=int)
                 self.send_sock.sendto(snd_msg.tobytes(), ("127.0.0.1", 40002))
 
                 # if not play again end the operator
