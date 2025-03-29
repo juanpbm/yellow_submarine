@@ -1,0 +1,216 @@
+Participant Name: 8061, Haptic: True
+2025-03-26 20:12:38, Passed: True, Time: 54.24, Path_length: 5683.26, Damage: 8 
+2025-03-26 20:13:40, Passed: True, Time: 50.42, Path_length: 5037.91, Damage: 7 
+2025-03-26 20:14:32, Passed: True, Time: 43.90, Path_length: 5316.61, Damage: 2 
+2025-03-26 20:15:24, Passed: True, Time: 40.37, Path_length: 4754.40, Damage: 3 
+2025-03-26 20:16:14, Passed: True, Time: 38.80, Path_length: 4804.99, Damage: 6 
+2025-03-26 20:17:10, Passed: True, Time: 34.01, Path_length: 4731.52, Damage: 6 
+2025-03-26 20:18:02, Passed: True, Time: 41.38, Path_length: 5153.05, Damage: 2 
+2025-03-26 20:18:56, Passed: True, Time: 38.91, Path_length: 4884.88, Damage: 4 
+Participant Name: 1337, Haptic: False
+2025-03-26 20:29:19, Passed: True, Time: 33.89, Path_length: 3907.26, Damage: 5 
+2025-03-26 20:30:01, Passed: True, Time: 32.27, Path_length: 3812.21, Damage: 4 
+2025-03-26 20:30:44, Passed: True, Time: 30.93, Path_length: 3794.17, Damage: 1 
+2025-03-26 20:31:42, Passed: True, Time: 32.91, Path_length: 4108.25, Damage: 0 
+2025-03-26 20:32:24, Passed: True, Time: 31.05, Path_length: 3976.12, Damage: 1 
+2025-03-26 20:33:00, Passed: True, Time: 28.50, Path_length: 3667.12, Damage: 2 
+2025-03-26 20:33:42, Passed: True, Time: 31.58, Path_length: 3895.07, Damage: 3 
+2025-03-26 20:34:33, Passed: True, Time: 30.83, Path_length: 3680.14, Damage: 1 
+Participant Name: 7067, Haptic: True
+2025-03-26 20:45:25, Passed: True, Time: 27.60, Path_length: 4934.34, Damage: 9 
+2025-03-26 20:46:01, Passed: True, Time: 25.21, Path_length: 4669.39, Damage: 5 
+2025-03-26 20:46:40, Passed: True, Time: 26.85, Path_length: 4325.18, Damage: 1 
+2025-03-26 20:47:12, Passed: True, Time: 21.05, Path_length: 4039.62, Damage: 1 
+2025-03-26 20:47:45, Passed: True, Time: 22.77, Path_length: 4579.13, Damage: 11 
+2025-03-26 20:48:16, Passed: True, Time: 22.56, Path_length: 4576.45, Damage: 3 
+2025-03-26 20:48:46, Passed: True, Time: 21.97, Path_length: 3809.87, Damage: 3 
+2025-03-26 20:49:25, Passed: True, Time: 17.31, Path_length: 3842.52, Damage: 9 
+Participant Name: 2785, Haptic: False
+2025-03-26 21:01:08, Passed: True, Time: 25.47, Path_length: 4436.13, Damage: 6 
+2025-03-26 21:02:35, Passed: True, Time: 25.52, Path_length: 4346.37, Damage: 5 
+2025-03-26 21:03:15, Passed: True, Time: 23.40, Path_length: 4456.11, Damage: 16 
+2025-03-26 21:03:44, Passed: True, Time: 20.63, Path_length: 4095.40, Damage: 11 
+2025-03-26 21:04:19, Passed: True, Time: 20.57, Path_length: 4716.74, Damage: 24 
+2025-03-26 21:04:50, Passed: True, Time: 18.92, Path_length: 5160.54, Damage: 6 
+2025-03-26 21:05:30, Passed: True, Time: 23.75, Path_length: 4746.81, Damage: 6 
+2025-03-26 21:06:24, Passed: True, Time: 18.24, Path_length: 4075.58, Damage: 24  
+Participant Name: 5357, Haptic: True
+2025-03-26 21:15:39, Passed: True, Time: 35.26, Path_length: 5300.89, Damage: 11 
+2025-03-26 21:16:27, Passed: True, Time: 31.48, Path_length: 4724.67, Damage: 6 
+2025-03-26 21:17:08, Passed: True, Time: 30.79, Path_length: 4197.97, Damage: 4 
+2025-03-26 21:17:43, Passed: True, Time: 22.94, Path_length: 3670.97, Damage: 3 
+2025-03-26 21:18:22, Passed: True, Time: 26.80, Path_length: 4030.59, Damage: 1 
+2025-03-26 21:18:56, Passed: True, Time: 21.98, Path_length: 3609.08, Damage: 5 
+2025-03-26 21:19:34, Passed: True, Time: 26.27, Path_length: 4027.01, Damage: 8 
+2025-03-26 21:20:14, Passed: True, Time: 23.06, Path_length: 3990.85, Damage: 11 
+Participant Name: 4142, Haptic: False
+2025-03-26 21:30:22, Passed: True, Time: 32.73, Path_length: 3878.59, Damage: 18 
+2025-03-26 21:31:01, Passed: True, Time: 24.76, Path_length: 3404.64, Damage: 19 
+2025-03-26 21:31:39, Passed: True, Time: 24.69, Path_length: 3676.52, Damage: 25 
+2025-03-26 21:32:21, Passed: True, Time: 21.71, Path_length: 4135.15, Damage: 45 
+2025-03-26 21:33:01, Passed: True, Time: 20.97, Path_length: 4024.59, Damage: 8 
+2025-03-26 21:33:36, Passed: True, Time: 19.85, Path_length: 3662.63, Damage: 13 
+2025-03-26 21:34:24, Passed: True, Time: 22.04, Path_length: 3700.95, Damage: 33 
+2025-03-26 21:34:59, Passed: True, Time: 21.19, Path_length: 3494.99, Damage: 7 
+Participant Name: 3215, Haptic: True
+2025-03-26 21:50:39, Passed: True, Time: 30.75, Path_length: 4421.09, Damage: 42 
+2025-03-26 21:51:39, Passed: True, Time: 31.84, Path_length: 4133.42, Damage: 49 
+2025-03-26 21:52:12, Passed: True, Time: 20.68, Path_length: 4006.87, Damage: 19 
+2025-03-26 21:52:42, Passed: True, Time: 20.87, Path_length: 3791.07, Damage: 20 
+2025-03-26 21:53:13, Passed: True, Time: 22.22, Path_length: 3496.56, Damage: 12 
+2025-03-26 21:53:46, Passed: True, Time: 22.61, Path_length: 3910.53, Damage: 28 
+2025-03-26 21:54:30, Passed: True, Time: 26.11, Path_length: 3677.32, Damage: 28 
+2025-03-26 21:55:21, Passed: True, Time: 25.71, Path_length: 4646.92, Damage: 20 
+Participant Name: 4585, Haptic: False
+2025-03-27 20:42:20, Passed: True, Time: 38.03, Path_length: 4164.69, Damage: 41 
+2025-03-27 20:43:03, Passed: True, Time: 32.90, Path_length: 4310.73, Damage: 26 
+2025-03-27 20:43:48, Passed: True, Time: 36.20, Path_length: 4088.26, Damage: 22 
+2025-03-27 20:44:25, Passed: True, Time: 30.19, Path_length: 4788.13, Damage: 12 
+2025-03-27 20:45:26, Passed: True, Time: 39.29, Path_length: 5322.86, Damage: 44 
+2025-03-27 20:46:06, Passed: True, Time: 30.30, Path_length: 4906.57, Damage: 33 
+2025-03-27 20:46:53, Passed: True, Time: 34.10, Path_length: 4083.14, Damage: 51 
+2025-03-27 20:47:40, Passed: True, Time: 39.23, Path_length: 4565.22, Damage: 88 
+Participant Name: 2548, Haptic: True
+2025-03-27 20:52:30, Passed: True, Time: 46.29, Path_length: 4422.09, Damage: 6 
+2025-03-27 20:53:39, Passed: True, Time: 51.48, Path_length: 5337.79, Damage: 37 
+2025-03-27 20:54:32, Passed: True, Time: 48.26, Path_length: 5182.59, Damage: 17 
+2025-03-27 20:55:45, Passed: True, Time: 49.48, Path_length: 5442.92, Damage: 18 
+2025-03-27 20:56:51, Passed: True, Time: 51.24, Path_length: 4804.29, Damage: 14 
+2025-03-27 20:58:10, Passed: True, Time: 41.71, Path_length: 4340.74, Damage: 4 
+2025-03-27 20:58:58, Passed: True, Time: 41.50, Path_length: 4466.38, Damage: 4 
+2025-03-27 20:59:42, Passed: True, Time: 40.50, Path_length: 4611.08, Damage: 10 
+Participant Name: 4586, Haptic: False
+2025-03-27 21:01:39, Passed: True, Time: 57.79, Path_length: 4391.96, Damage: 20 
+2025-03-27 21:02:47, Passed: True, Time: 49.38, Path_length: 4713.64, Damage: 77 
+2025-03-27 21:03:47, Passed: True, Time: 45.31, Path_length: 4645.20, Damage: 18 
+2025-03-27 21:04:40, Passed: True, Time: 46.92, Path_length: 4390.01, Damage: 4 
+2025-03-27 21:05:37, Passed: True, Time: 49.04, Path_length: 4589.27, Damage: 52 
+2025-03-27 21:06:35, Passed: True, Time: 47.69, Path_length: 4766.19, Damage: 38 
+2025-03-27 21:07:28, Passed: True, Time: 38.56, Path_length: 4453.71, Damage: 12 
+2025-03-27 21:08:12, Passed: True, Time: 40.43, Path_length: 4731.96, Damage: 10 
+Participant Name: 2549, Haptic: True
+2025-03-27 21:32:39, Passed: True, Time: 38.20, Path_length: 4740.91, Damage: 25 
+2025-03-27 21:33:26, Passed: True, Time: 40.60, Path_length: 4785.98, Damage: 25 
+2025-03-27 21:34:08, Passed: True, Time: 38.44, Path_length: 4687.33, Damage: 26 
+2025-03-27 21:34:41, Passed: True, Time: 29.10, Path_length: 4138.85, Damage: 0 
+2025-03-27 21:35:12, Passed: True, Time: 26.47, Path_length: 4814.24, Damage: 5 
+2025-03-27 21:35:41, Passed: True, Time: 24.02, Path_length: 3969.03, Damage: 5 
+2025-03-27 21:36:13, Passed: True, Time: 28.71, Path_length: 3913.87, Damage: 25 
+2025-03-27 21:36:43, Passed: True, Time: 27.03, Path_length: 5119.76, Damage: 6 
+Participant Name: 4587, Haptic: False
+2025-03-27 21:53:48, Passed: True, Time: 36.52, Path_length: 4732.71, Damage: 14 
+2025-03-27 21:54:37, Passed: True, Time: 30.75, Path_length: 3863.93, Damage: 49 
+2025-03-27 21:55:19, Passed: True, Time: 32.24, Path_length: 4716.45, Damage: 70 
+2025-03-27 21:55:56, Passed: True, Time: 30.68, Path_length: 4109.79, Damage: 17 
+2025-03-27 21:56:50, Passed: True, Time: 34.65, Path_length: 4056.71, Damage: 46 
+2025-03-27 21:57:28, Passed: True, Time: 29.43, Path_length: 3762.88, Damage: 42 
+2025-03-27 21:58:09, Passed: True, Time: 30.59, Path_length: 4033.40, Damage: 27 
+2025-03-27 21:58:50, Passed: True, Time: 31.14, Path_length: 4121.32, Damage: 52 
+Participant Name: 2550, Haptic: True
+2025-03-27 22:03:09, Passed: False, Time: 60.01, Path_length: 5870.71, Damage: 61 
+2025-03-27 22:03:58, Passed: True, Time: 39.39, Path_length: 4405.74, Damage: 73 
+2025-03-27 22:06:30, Passed: True, Time: 44.39, Path_length: 4880.56, Damage: 61 
+2025-03-27 22:07:25, Passed: True, Time: 39.44, Path_length: 4608.54, Damage: 52 
+2025-03-27 22:08:34, Passed: False, Time: 60.01, Path_length: 5114.37, Damage: 38 
+2025-03-27 22:09:32, Passed: True, Time: 46.58, Path_length: 4564.92, Damage: 55 
+2025-03-27 22:10:08, Passed: True, Time: 31.85, Path_length: 3873.20, Damage: 27 
+2025-03-27 22:10:53, Passed: True, Time: 36.54, Path_length: 4514.76, Damage: 40 
+Participant Name: 4588, Haptic: False
+2025-03-27 22:46:29, Passed: True, Time: 48.27, Path_length: 4903.36, Damage: 22 
+2025-03-27 22:47:36, Passed: True, Time: 43.71, Path_length: 4641.27, Damage: 9 
+2025-03-27 22:48:19, Passed: True, Time: 33.89, Path_length: 4308.10, Damage: 3 
+2025-03-27 22:49:15, Passed: True, Time: 37.92, Path_length: 4084.96, Damage: 28 
+2025-03-27 22:50:05, Passed: True, Time: 38.35, Path_length: 4984.56, Damage: 26 
+2025-03-27 22:50:53, Passed: True, Time: 41.21, Path_length: 4569.22, Damage: 14 
+2025-03-27 22:51:54, Passed: True, Time: 40.43, Path_length: 4948.07, Damage: 10 
+2025-03-27 22:52:40, Passed: True, Time: 41.41, Path_length: 5294.80, Damage: 10 
+Participant Name: 2551, Haptic: True
+2025-03-27 23:08:41, Passed: True, Time: 49.42, Path_length: 6428.41, Damage: 31 
+2025-03-27 23:09:40, Passed: True, Time: 50.17, Path_length: 5241.23, Damage: 10 
+2025-03-27 23:10:37, Passed: True, Time: 49.27, Path_length: 4925.48, Damage: 2 
+2025-03-27 23:11:26, Passed: True, Time: 41.60, Path_length: 4734.46, Damage: 1 
+2025-03-27 23:12:17, Passed: True, Time: 42.47, Path_length: 4780.70, Damage: 0 
+2025-03-27 23:13:16, Passed: True, Time: 49.03, Path_length: 6292.48, Damage: 13 
+2025-03-27 23:14:12, Passed: True, Time: 52.54, Path_length: 5317.37, Damage: 4 
+2025-03-27 23:15:02, Passed: True, Time: 47.35, Path_length: 4936.49, Damage: 0 
+Participant Name: 2801, Haptic: False
+2025-03-28 13:52:12, Passed: True, Time: 55.46, Path_length: 4281.74, Damage: 6 
+2025-03-28 13:53:12, Passed: True, Time: 48.31, Path_length: 4047.04, Damage: 4 
+2025-03-28 13:55:47, Passed: False, Time: 60.04, Path_length: 4960.23, Damage: 15 
+2025-03-28 13:57:25, Passed: True, Time: 49.74, Path_length: 4084.45, Damage: 7 
+2025-03-28 13:58:18, Passed: True, Time: 44.04, Path_length: 4088.50, Damage: 5 
+2025-03-28 13:59:46, Passed: True, Time: 28.37, Path_length: 3908.59, Damage: 0 
+2025-03-28 14:00:18, Passed: True, Time: 26.79, Path_length: 3797.62, Damage: 3 
+2025-03-28 14:00:48, Passed: True, Time: 26.06, Path_length: 4260.30, Damage: 9 
+Participant Name: 2802, Haptic: True
+2025-03-28 14:10:57, Passed: True, Time: 30.77, Path_length: 4474.72, Damage: 3 
+2025-03-28 14:11:28, Passed: True, Time: 20.70, Path_length: 3974.50, Damage: 3 
+2025-03-28 14:11:57, Passed: True, Time: 19.25, Path_length: 4538.65, Damage: 9 
+2025-03-28 14:12:35, Passed: True, Time: 22.32, Path_length: 4820.62, Damage: 9 
+2025-03-28 14:13:13, Passed: True, Time: 22.90, Path_length: 5480.01, Damage: 9 
+2025-03-28 14:13:48, Passed: True, Time: 21.08, Path_length: 3614.47, Damage: 1 
+2025-03-28 14:14:16, Passed: True, Time: 21.34, Path_length: 3662.38, Damage: 1 
+2025-03-28 14:14:56, Passed: True, Time: 20.93, Path_length: 3508.86, Damage: 1 
+Participant Name: 2803, Haptic: True
+2025-03-28 14:19:34, Passed: True, Time: 45.51, Path_length: 5558.58, Damage: 17 
+2025-03-28 14:20:22, Passed: True, Time: 39.15, Path_length: 4942.47, Damage: 14 
+2025-03-28 14:21:14, Passed: True, Time: 42.88, Path_length: 4616.98, Damage: 5 
+2025-03-28 14:21:55, Passed: True, Time: 35.22, Path_length: 4664.80, Damage: 8 
+2025-03-28 14:22:37, Passed: True, Time: 37.35, Path_length: 4565.40, Damage: 7 
+2025-03-28 14:25:08, Passed: True, Time: 38.80, Path_length: 4881.22, Damage: 6 
+2025-03-28 14:25:44, Passed: True, Time: 31.51, Path_length: 4123.85, Damage: 0 
+2025-03-28 14:26:23, Passed: True, Time: 31.12, Path_length: 4817.42, Damage: 1 
+Participant Name: 2804, Haptic: False 
+2025-03-28 14:28:59, Passed: True, Time: 22.73, Path_length: 4366.56, Damage: 20 
+2025-03-28 14:29:31, Passed: True, Time: 19.59, Path_length: 4473.97, Damage: 9 
+2025-03-28 14:30:02, Passed: False, Time: 29.05, Path_length: 4722.12, Damage: 100 
+2025-03-28 14:30:24, Passed: True, Time: 18.44, Path_length: 4171.78, Damage: 11 
+2025-03-28 14:30:50, Passed: True, Time: 22.01, Path_length: 4669.11, Damage: 24 
+2025-03-28 14:31:32, Passed: True, Time: 19.17, Path_length: 3864.26, Damage: 10 
+2025-03-28 14:31:58, Passed: True, Time: 18.81, Path_length: 4217.65, Damage: 20 
+2025-03-28 14:32:20, Passed: True, Time: 15.74, Path_length: 3921.92, Damage: 9 
+Participant Name: 2805, Haptic: False
+2025-03-28 15:57:47, Passed: True, Time: 29.77, Path_length: 3643.77, Damage: 17 
+2025-03-28 15:58:22, Passed: True, Time: 25.28, Path_length: 3701.86, Damage: 10 
+2025-03-28 15:59:40, Passed: True, Time: 24.11, Path_length: 3368.02, Damage: 23 
+2025-03-28 16:00:13, Passed: True, Time: 25.94, Path_length: 3937.78, Damage: 5 
+2025-03-28 16:00:48, Passed: True, Time: 21.33, Path_length: 3384.90, Damage: 4 
+2025-03-28 16:02:00, Passed: True, Time: 19.72, Path_length: 2982.97, Damage: 2 
+2025-03-28 16:02:56, Passed: True, Time: 19.80, Path_length: 2970.68, Damage: 8 
+2025-03-28 16:03:26, Passed: True, Time: 20.54, Path_length: 3265.42, Damage: 3 
+Participant Name: 2807, Haptic: True
+2025-03-28 17:05:53, Passed: True, Time: 19.14, Path_length: 4798.91, Damage: 9 
+2025-03-28 17:06:13, Passed: True, Time: 17.83, Path_length: 3293.46, Damage: 2 
+2025-03-28 17:06:35, Passed: True, Time: 18.18, Path_length: 4199.35, Damage: 6 
+2025-03-28 17:07:20, Passed: True, Time: 15.46, Path_length: 3881.84, Damage: 6 
+2025-03-28 17:08:04, Passed: True, Time: 16.91, Path_length: 4270.55, Damage: 10 
+2025-03-28 17:08:24, Passed: True, Time: 14.49, Path_length: 3322.89, Damage: 5 
+2025-03-28 17:09:07, Passed: True, Time: 15.74, Path_length: 3790.58, Damage: 3 
+2025-03-28 17:09:28, Passed: True, Time: 16.24, Path_length: 3489.40, Damage: 4 
+Participant Name: 2808, Haptic: False
+2025-03-28 17:22:28, Passed: True, Time: 38.73, Path_length: 4411.05, Damage: 8 
+2025-03-28 17:23:04, Passed: True, Time: 29.75, Path_length: 3765.21, Damage: 6 
+2025-03-28 17:23:35, Passed: True, Time: 25.07, Path_length: 3563.33, Damage: 0 
+2025-03-28 17:24:10, Passed: True, Time: 27.75, Path_length: 3727.83, Damage: 0 
+2025-03-28 17:24:37, Passed: True, Time: 21.98, Path_length: 3786.02, Damage: 1 
+2025-03-28 17:25:09, Passed: True, Time: 17.61, Path_length: 3173.05, Damage: 1 
+2025-03-28 17:25:43, Passed: True, Time: 21.68, Path_length: 3903.44, Damage: 7 
+2025-03-28 17:26:20, Passed: True, Time: 16.81, Path_length: 3018.20, Damage: 6 
+Participant Name: 2809, Haptic: True
+2025-03-28 17:37:35, Passed: True, Time: 26.25, Path_length: 3530.34, Damage: 15 
+2025-03-28 17:38:02, Passed: True, Time: 21.61, Path_length: 3446.79, Damage: 6 
+2025-03-28 17:38:41, Passed: True, Time: 22.03, Path_length: 3876.64, Damage: 0 
+2025-03-28 17:39:30, Passed: True, Time: 21.85, Path_length: 3659.38, Damage: 0
+2025-03-28 17:40:21, Passed: True, Time: 23.68, Path_length: 3772.91, Damage: 26 
+2025-03-28 17:40:45, Passed: True, Time: 21.00, Path_length: 3637.21, Damage: 0 
+2025-03-28 17:41:02, Passed: True, Time: 14.67, Path_length: 3014.16, Damage: 2 
+2025-03-28 17:41:19, Passed: True, Time: 13.86, Path_length: 2886.10, Damage: 3
+Participant Name: 2810, Haptic: False
+2025-03-28 20:46:28, Passed: True, Time: 29.65, Path_length: 4048.74, Damage: 3 
+2025-03-28 20:47:00, Passed: True, Time: 24.22, Path_length: 4127.71, Damage: 11 
+2025-03-28 20:47:28, Passed: True, Time: 26.78, Path_length: 4656.41, Damage: 13 
+2025-03-28 20:47:59, Passed: True, Time: 25.19, Path_length: 3970.43, Damage: 1 
+2025-03-28 20:48:28, Passed: True, Time: 24.44, Path_length: 4017.07, Damage: 1 
+2025-03-28 20:49:08, Passed: True, Time: 25.80, Path_length: 3876.42, Damage: 4 
+2025-03-28 20:49:35, Passed: True, Time: 23.97, Path_length: 4169.46, Damage: 13 
+2025-03-28 20:50:05, Passed: True, Time: 25.19, Path_length: 3911.30, Damage: 1 
