@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
+from scipy.stats import ttest_ind
 
 results = []
 participant_results = None
@@ -118,3 +119,26 @@ print(f"Haptics AVG damge {np.mean(hap_damages)}")
 print(f"No Haptics AVG Time: {np.mean(nohap_times)  }")
 print(f"No Haptics AVG Path Length {np.mean(nohap_path_lengths)}")
 print(f"No Haptics AVG damge {np.mean(nohap_damages)}")
+
+
+
+
+# Compute standard deviations
+print("\n--- Standard Deviations ---")
+print(f"Haptics STD Time: {np.std(hap_times):.3f}")
+print(f"Haptics STD Path Length: {np.std(hap_path_lengths):.3f}")
+print(f"Haptics STD Damage: {np.std(hap_damages):.3f}")
+print(f"No Haptics STD Time: {np.std(nohap_times):.3f}")
+print(f"No Haptics STD Path Length: {np.std(nohap_path_lengths):.3f}")
+print(f"No Haptics STD Damage: {np.std(nohap_damages):.3f}")
+
+# Perform t-tests
+print("\n--- Independent t-tests (Haptics vs No Haptics) ---")
+t_stat_time, p_val_time = ttest_ind(hap_times, nohap_times, equal_var=False)
+t_stat_path, p_val_path = ttest_ind(hap_path_lengths, nohap_path_lengths, equal_var=False)
+t_stat_damage, p_val_damage = ttest_ind(hap_damages, nohap_damages, equal_var=False)
+
+print(f"Time - t-statistic: {t_stat_time:.3f}, p-value: {p_val_time:.4f}")
+print(f"Path Length - t-statistic: {t_stat_path:.3f}, p-value: {p_val_path:.4f}")
+print(f"Damage - t-statistic: {t_stat_damage:.3f}, p-value: {p_val_damage:.4f}")
+
