@@ -5,6 +5,7 @@ from matplotlib.ticker import MaxNLocator
 results = []
 participant_results = None
 
+# Read and parse results file. 
 with open("results.txt", "r") as file:
     for line in file:
         line = line.strip()
@@ -29,6 +30,7 @@ with open("results.txt", "r") as file:
                 }
                 participant_results["trials"].append(trial)
 
+# Define plots for haptics and no haptics
 fig_nohap, axes_nohap = plt.subplots(3, 1, figsize=(7, 7))
 axes_nohap[0].set_xlabel("Trial#")
 axes_nohap[0].set_ylabel("Time")
@@ -69,8 +71,7 @@ for participant in results:
         time.append(trial["time"])
         path_length.append(trial["path_length"])
         damage.append(trial["damage"])
-
-  
+    # print averages per participant. TODO: not sure if needed
     print(f"Participant: {participant['name']}, AVG Time: {np.mean(time)  }")
     print(f"Participant: {participant['name']}, AVG Path Length {np.mean(path_length)}")
     print(f"Participant: {participant['name']}, AVG damge {np.mean(damage)}")
@@ -85,7 +86,8 @@ for participant in results:
         nohap_times.extend(time)
         nohap_path_lengths.extend(path_length)
         nohap_damages.extend(damage)
-
+    
+    # Add participant to the plot 
     axes[0].plot(range(len(time)), time, marker='o', color=color, label=participant['name'])
     axes[0].legend()
     axes[0].grid(True)
@@ -96,14 +98,7 @@ for participant in results:
     axes[2].legend()
     axes[2].grid(True)
 
-
-print(f"Haptics AVG Time: {np.mean(hap_times)  }")
-print(f"Haptics AVG Path Length {np.mean(hap_path_lengths)}")
-print(f"Haptics AVG damge {np.mean(hap_damages)}")
-print(f"No Haptics AVG Time: {np.mean(nohap_times)  }")
-print(f"No Haptics AVG Path Length {np.mean(nohap_path_lengths)}")
-print(f"No Haptics AVG damge {np.mean(nohap_damages)}")
-
+# Show plots
 handles, labels = axes_hap[0].get_legend_handles_labels()
 fig_hap.legend(handles, labels, loc="upper left", fontsize=10)
 for ax in axes_hap:
@@ -112,8 +107,14 @@ handles, labels = axes_nohap[0].get_legend_handles_labels()
 fig_nohap.legend(handles, labels, loc="upper left", fontsize=10)
 for ax in axes_nohap:
     ax.legend().remove()
-
-
 fig_hap.tight_layout()
 fig_nohap.tight_layout()
 plt.show()
+
+# Calculate and plot averages
+print(f"Haptics AVG Time: {np.mean(hap_times)  }")
+print(f"Haptics AVG Path Length {np.mean(hap_path_lengths)}")
+print(f"Haptics AVG damge {np.mean(hap_damages)}")
+print(f"No Haptics AVG Time: {np.mean(nohap_times)  }")
+print(f"No Haptics AVG Path Length {np.mean(nohap_path_lengths)}")
+print(f"No Haptics AVG damge {np.mean(nohap_damages)}")
