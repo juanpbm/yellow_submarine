@@ -6,10 +6,11 @@ import os
 import time 
 
 class Graphics:
-    def __init__(self,device_connected,num_fish=0,window_size=(800,600), max_time=1.0):
+    def __init__(self,device_connected, num_fish=0, window_size=(800,600), max_time=1.0):
         self.device_connected = device_connected
         self.max_time = max_time
-        #initialize pygame window
+        
+        # Initialize pygame window
         self.window_size = window_size #default (800, 600)
         os.environ['SDL_VIDEO_WINDOW_POS'] = "20,100" # Where in the screen the window pops up
         pygame.init()
@@ -18,7 +19,7 @@ class Graphics:
 
         self.screenHaptics = pygame.Surface(self.window_size)
         self.xc = self.screenHaptics.get_rect().centerx
-        self.yc =self.screenHaptics.get_rect().centery
+        self.yc = self.screenHaptics.get_rect().centery
 
         ##add nice icon from https://www.cleanpng.com/png-yellow-submarine-clip-art-submarine-biomass-vector-1902493/
         self.icon = pygame.image.load('imgs/yellow_submarine_left.png')
@@ -101,10 +102,11 @@ class Graphics:
         self.current = pygame.transform.scale(pygame.image.load('imgs/current_line.png'), (800, 120))
         self.current_rect = self.current.get_rect(topleft=self.current_pos)
         
-        # Fish
+        # Fish image from https://www.pngegg.com/en/png-exrop
         self.fish_left = pygame.transform.scale(pygame.image.load('imgs/fish_left.png'), (40, 20))
         self.fish_right = pygame.transform.scale(pygame.image.load('imgs/fish_right.png'), (40, 20))
 
+        # Init number of fishes and positions
         self.fish = [0,0,0]
 
         self.fish_dir = np.array([self.fish_right, self.fish_left, self.fish_right])
@@ -258,7 +260,7 @@ class Graphics:
                 pygame.draw.circle(self.screenHaptics, (0, 0, 0),p, 5)
                 pygame.draw.circle(self.screenHaptics, (200, 200, 200),p, 2)
         
-        ### Hand visualisation
+        ### Gripper visualisation
         hand_pos = (self.effort_cursor[0], self.effort_cursor[1] + 10)
         self.screenHaptics.blit(self.hhandle, hand_pos)
         
@@ -281,7 +283,7 @@ class Graphics:
         time_text_rect.bottomleft = (5, 600)
         self.screenHaptics.blit(time_text, time_text_rect)
 
-        #Display damage
+        # Display damage
         damage_text = "Health: "
         damage_font = pygame.font.Font('freesansbold.ttf', 20)
         damage_text = damage_font.render(damage_text, True, (255, 255, 255), (0, 0, 0))
@@ -289,7 +291,7 @@ class Graphics:
         damage_text_rect.bottomleft = (615, 599)
         self.screenHaptics.blit(damage_text, damage_text_rect)
         pygame.draw.rect(self.screenHaptics, (100, 100, 100), (695, 573, 100, 25), border_radius=5)
-        # Draw progress fill (green)
+        # Draw damage level (green - 0% -> red - 100%)
         pygame.draw.rect(self.screenHaptics, (255 * ((min(dam,100)/100)), 255 * (1-(min(dam,100)/100)), 0), (695, 573, 100 * (1-(min(dam,100)/100)), 25), border_radius=5)
 
         ##Fuse it back together
@@ -300,7 +302,7 @@ class Graphics:
         self.clock.tick(self.FPS)
     
     def show_loading_screen(self, i=0):
-        # Show Intro message
+        # Show Intro message with loading dots
         if (i % 15000 == 0):
             self.window.fill(self.cBlack)
             dots_cycle = ["", ".", "..", "...", "....", ".....", "......", ".......","........", ".........",".........."]
@@ -315,7 +317,7 @@ class Graphics:
 
     # FISH
     def render_fish(self):
-        
+        # Update Fish position and direction 
         for n, f in enumerate(self.fish):
             if(f == 1):
                 self.screenHaptics.blit(self.fish_dir[n], self.fish_pos[n])

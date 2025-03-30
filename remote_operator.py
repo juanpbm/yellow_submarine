@@ -81,19 +81,19 @@ class RemoteOperator:
                 g.show_linkages = not g.show_linkages
             if key == ord('d'): #Change the visibility of the debug text
                 g.show_debug = not g.show_debug
-            if key == pygame.K_SPACE: # Space bar pressed
+            if key == pygame.K_SPACE: # Space bar pressed for grabbing object
                 if (self.grab_object == 0):
                     self.grab_object = 1
                 else:
                     self.grab_object = 0
 
+        # Movement of the submarine with arrow keys
         if keypressed[pygame.K_LEFT]:
             self.xs[0] = np.clip(self.xs[0] - 1, 0, 800 - 150)
         if keypressed[pygame.K_RIGHT]:
             self.xs[0] = np.clip(self.xs[0] + 1, 0, 800 - 150)
 
         # Send Position from the haptic device or mouse and the submarine position
-        # Scale xh between -1 and 1
         message = np.array([xh, self.xs,(self.grab_object,0)])
         self.send_sock.sendto(message.tobytes(), ("127.0.0.1", 40002))
 
@@ -102,7 +102,7 @@ class RemoteOperator:
         try:
             while True:
                 try:
-                    # Empty buffer TODO: check that forces are still ok
+                    # Empty buffer
                     while True:  # Keep reading until the buffer is empty
                         self.recv_sock.settimeout(0.01)
                         recv_data, _ = self.recv_sock.recvfrom(1024)
@@ -114,7 +114,6 @@ class RemoteOperator:
             rcv_msg = np.frombuffer(last_message, dtype=np.float32)
             # is the first element is 0 it is a force message
             if (int(rcv_msg[0]) == 0 ):
-                # TODO: Scale the feedback to make it stable
                 fe = np.array(rcv_msg[1:], dtype=np.float32)
             # if the first element is a 1 is a metrics and game over message
             elif (int(rcv_msg[0]) == 1 ):
@@ -139,15 +138,18 @@ class RemoteOperator:
                     for key in keydowns:
                         if key== pygame.K_SPACE:
                             run = False 
+            # If the first element is a 2 is a reset grab object message
             elif (int(rcv_msg[0]) == 2 ):
                 self.grab_object = 0
 
+        # If there is a timeout the connection with the submarine has been lost
         except socket.timeout:
             raise EndGame("Connection lost", 1)
 
         # Update previous position
         self.prev_xh = xh.copy()
-        fe[1]=fe[1]*0.5
+        # Sacale force in y for compatibility with the haptic device
+        fe[1] = fe[1]*0.5
 
         ##############################################
         if self.device_connected: #set forces only if the device is connected

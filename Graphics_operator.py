@@ -14,7 +14,7 @@ class Graphics:
 
         pygame.init()
 
-        # Add music
+        # Add music from https://pixabay.com/es/music/sintetizador-neon-gaming-128925/
         pygame.mixer.init()
         pygame.mixer.music.load("imgs/neon-gaming-128925.mp3")
         pygame.mixer.music.play(-1)
@@ -51,7 +51,7 @@ class Graphics:
         self.cOrange = (255,100,0)
         self.cYellow = (255,255,0)
         
-        self.hhandle = pygame.image.load('imgs/handle.png') #
+        self.hhandle = pygame.image.load('imgs/handle.png')
         
         self.haptic_width = 48
         self.haptic_height = 48
