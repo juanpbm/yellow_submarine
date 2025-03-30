@@ -63,11 +63,9 @@ class Submarine:
         self.collision_chest = 0
         self.collision_bottle = 0
 
-        # Haptic dim anf mass 
+        # Haptic dim and mass 
         self.mass=0.5
         self.prev_vh = 0
-
-        # TODO: use the ones from fro graphics 
         self.haptic_width = 48
         self.haptic_height = 48
         self.haptic_length = 48
@@ -95,6 +93,7 @@ class Submarine:
         self.section_height = self.window_height // self.num_sections  
         self.perturbations = []  # List to store active perturbations
 
+        # Fish collision constant
         self.k_fish = 50 
 
         # Wait for at least one message from the master. Only continue once something is received.
@@ -125,7 +124,7 @@ class Submarine:
         self.init_time = time.time() # seconds
 
     def generate_perturbation(self):
-     
+        # Randomize the generation of the current's forces
         section = random.randint(2, self.num_sections - 1)  
         amplitude = random.uniform(3, 4)  
         frequency = random.uniform(0.5, 2.0)  
@@ -142,6 +141,7 @@ class Submarine:
         }
 
     def get_perturbation_force(self, xh, g):
+        # Calculate Current Force
         perturbation_force = np.array([0.0, 0.0]) 
         current_time = time.time()
         new_perturbations = []
@@ -187,6 +187,7 @@ class Submarine:
         cursor=g.effort_cursor
 
         if grab_object:
+            # Detect when an object is grabbed for the first time and make sure only one can be picked up
             if not self.object_grabbed:
                 if (cursor.colliderect(g.anchor))  and (not cursor.colliderect(g.chest)) and ( not cursor.colliderect(g.bottle)) and "anchor" not in self.objects_in_target:
                         g.anchor.topleft=(cursor.bottomleft[0],cursor.bottomleft[1]-12)
@@ -205,6 +206,7 @@ class Submarine:
                         self.object_mass = 0.1
                 elif not ((cursor.colliderect(g.chest)) or (cursor.colliderect(g.anchor)) or (cursor.colliderect(g.anchor))):
                     self.drop_object()
+            # If an object is alreadu grabbed update its position with the submarine gripper position
             else:
                 if self.grabbed_object == "anchor":
                     g.anchor.topleft = (cursor.bottomleft[0], cursor.bottomleft[1]-12)
@@ -223,19 +225,23 @@ class Submarine:
                     if g.bottle.colliderect(g.table):
                         self.objects_in_target.append("bottle")
                         self.drop_object()
+        # Reset if the space bar is pressed again
         else:
             self.object_grabbed = False
             self.grabbed_object = ""
             self.object_mass = 0.0
 
+    # Helper fn to reduce code when dropping an object
     def drop_object(self):  
         self.object_grabbed = False
         self.grabbed_object = ""
         self.object_mass = 0.0
+        # Send message to the operator to reset the garb object flag
         msg = np.array([2], dtype=np.float32)
         self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
         time.sleep(0.02) 
 
+    # Calculate all the forces involved in the haptic feedback
     def calc_forces(self, xh):
         g = self.graphics
         dt = 0.01
@@ -250,8 +256,6 @@ class Submarine:
         depth = xh[1] / g.window_scale  # Depth in meters (y-axis increases downward)
         f_hydrostatic = self.water_density * self.gravity * depth * self.cross_sectional_area
         f_hydrostatic = np.array([0, f_hydrostatic])  # Apply only in the y-axis
-
-
         f_perturbation = -(self.mass * self.gravity - self.water_density * self.displaced_volume * self.gravity)
         f_perturbation = np.array([0, f_perturbation]) + f_hydrostatic + f_wave
 
@@ -260,8 +264,7 @@ class Submarine:
         fe += f_perturbation 
         
         haptic_rect = pygame.Rect(xh[0], xh[1], self.haptic_width, self.haptic_height)
-        # TODO: FIX FORCE FISH
-        # TODO: FIX FORCE FISH
+        # Forces from fish collision
         if self.collision_act > 0:
             penetration_depth = max(0, self.collision_act + 40 - haptic_rect.left)
             f_fish[0] = (self.k_fish * penetration_depth/600)
@@ -269,15 +272,14 @@ class Submarine:
             # Reset collision state after applying force
             self.collision_act = 0  # <-- Add this line
 
-        # print(fe,"2")
+        # Damping of the water
         v_h = ((xh - self.prev_xh) / g.window_scale) / dt
         self.b_water = 0.5
         f_hydro = np.array(-self.b_water * v_h)
-    
         fe += f_hydro
 
+        # Inertia of the crane and object
         a_h = ((v_h - self.prev_vh) / g.window_scale) / dt
-
         f_inertia = self.mass* a_h
         object_inertia = np.array([0.0,0.0], dtype=np.float32)
         if (self.object_grabbed):
@@ -289,7 +291,6 @@ class Submarine:
         return fe
 
     def collision_object(self,xh, object, collision_specific_object, offset=0 ):
-        #TODO: add damage for colliding with walls, drop object.
         # Check if the limits of the handle respect to xh collision with the object
         if (((xh[0]+ 20)>object.topleft[0]) and ((xh[0]- 20)<object.topright[0]) ) and ((xh[1]+12 + offset)>object.topleft[1]) and (collision_specific_object==0):
                 # Check if the collision is from top, left or right
@@ -318,6 +319,7 @@ class Submarine:
 
         return xh, collision_specific_object
 
+    # determine the force depending on the side of the wall
     def force_wall(self,difference, k=0.2):
         if (difference<50):
             difference=50
@@ -327,7 +329,6 @@ class Submarine:
         elif (difference<70):
             difference=150
             k=0.4
-
         elif(difference<90):
             difference=500
             k=0.8
@@ -347,18 +348,17 @@ class Submarine:
         
         # Receive and process messages
         try:
-            # Receive position
+            # Receive position from the operator via UDP
             recv_data, _ = self.recv_sock.recvfrom(64)
             data = np.array(np.frombuffer(recv_data, dtype=np.float64))
-            #print("message_recieved",data)
-            # Rescale xm[0] from -1 to 1 to 0 to 800
+            # scale and center position of gripper relative to the submarine position
             xm = data[:2]
             xm[0] = np.clip((xm[0] + ((g.submarine_pos[0] + 177) - (g.window_size[0]/2))), -100, g.window_size[0] + 100)
             xm[1] = np.clip((xm[1] * 1.3), 0, g.window_size[1] + 75)
             xm = np.array(xm, dtype=int)
- 
-            xm = np.array(xm, dtype=int)
+            # Position of the submarine 
             xs = np.array(data[2:4], dtype=int)
+            # Grabb object
             grab_object=data[4]
             
         # If there is a timeout the connection with the operator has been lost
@@ -368,15 +368,17 @@ class Submarine:
         # Grabbing Objects
         self.Grab_object(grab_object)
 
+        # Calculate forces
         fe = self.calc_forces(xh)
         self.prev_xh = xh.copy()
 
         # Process the forces and position to render the environment
         xh = g.sim_forces(xh,fe,xm,mouse_k=0.5,mouse_b=0.8) # Simulate forces with mouse haptics
         
+        # Update fish
         g.render_fish()
 
-        # Check collision with fish
+        # Check collision with fish and increase damage
         self.collision_act = 0  # Reset collision state every frame
         for n, f in enumerate(g.fish):
             if f == 1:              
@@ -449,43 +451,43 @@ class Submarine:
             xh, self.collision_chest= self.collision_object(xh,g.chest, self.collision_chest)
             xh, self.collision_bottle= self.collision_object(xh,g.bottle, self.collision_bottle,5)
            
-        # Send force the first 0 is the type of the message informing the operator that it is a force
+        # Send force the first 0 is the type of the message informing the operator that it is a force message
         if self.render_haptics:
             msg = np.array([0, *fe], dtype=np.float32)
         else: 
             msg = np.array([0, 0, 0], dtype=np.float32)
-
-
         self.send_sock.sendto(msg.tobytes(), ("127.0.0.1", 40001))
 
+        # Update Visualization
         g.render(pA0, pB0, pA, pB, xh, fe, xm, xs, self.init_time, self.damage)  # Render environment
-        # fe = 0
+
         # Skip First iteration as the distance should be 0
         if not self.first:
             self.first = True
-        # Get distance traveled from the previous frame to update the path length
+        # Update the path length with the distance traveled since the previous fame
         else:
             self.path_length += np.linalg.norm(self.prev_xh - np.ceil(xh))
 
-        # Check if game is over
+        # Check if game is over FAIL
         if (time.time() - self.init_time >= self.max_time or self.damage >= 100):
             self.passed = False
             raise EndGame("Game Finished", 0)
+        # Check is the game is over WIN
         elif len(self.objects_in_target) == 3:
             self.passed = True
             raise EndGame("Game Finished", 0)
 
     def close(self, show_exit_screen):
-        # Get Metrics
         play_again = False
         if show_exit_screen: 
+            # Get metrics 
             final_time = time.time() - self.init_time
             results = np.array([1, self.passed, final_time, self.path_length, self.damage], dtype=np.float32)
             # Send metrics the first element is 1, the type of the message informing the operator that it is a metrics message
             self.send_sock.sendto(results.tobytes(), ("127.0.0.1", 40001))
-            # print metrics to make sure they were recieved correctly
+            # print metrics to make sure they were received correctly
             print(f"Passed: {self.passed}, Time: {final_time:.2f}, Path_length: {self.path_length:.2f}, damage: {self.damage:.0f}")
-            # save results to file 
+            # Save results to file 
             with open("results.txt", "a") as file:
                 file.write(f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}, Passed: {self.passed}, Time: {final_time:.2f}, Path_length: {self.path_length:.2f}, Damage: {self.damage:.0f} \n")
             
@@ -501,7 +503,7 @@ class Submarine:
                         play_again = bool(data[1])
                         break
                 except :
-                    # add a 2min time-out to prevent an infinite loop.
+                    # add a 1 min time-out to prevent an infinite loop if the operator is no longer active.
                     if (time.time() - start_time > 60):
                         break
                     continue
@@ -515,16 +517,20 @@ class Submarine:
 
 if __name__=="__main__":
 
+    # Name and haptics enabled
     try:
         name = sys.argv[1]
     except:
+        # Default name
         name = "unknown"
     try:
         render_haptics = sys.argv[2].lower() == "true"
     except:
+        # Default to haptics enabled
         render_haptics = True
         
     play_again = True
+    # Add name and haptics mode to the results file
     with open("results.txt", "a") as file:
             file.write(f"Participant Name: {name}, Haptic: {render_haptics}\n")
         
@@ -533,6 +539,7 @@ if __name__=="__main__":
         try:
             while True:
                 submarine.run()
+        # Catch the endgame exceptions and act acordingly
         except EndGame as e:
             print(f"Game stopped with exception: {e}")
             play_again = submarine.close(e.error_code == 0)
@@ -541,6 +548,7 @@ if __name__=="__main__":
                 pygame.quit()
                 sys.exit(1)
         except Exception as e:
+            # Print any other exceptions thrown
             print("Unhandled exception occurred:")
             traceback.print_exc()
             break

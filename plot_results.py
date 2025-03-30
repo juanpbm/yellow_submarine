@@ -1,84 +1,105 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
+from scipy.stats import ttest_ind
 
 results = []
 participant_results = None
 
+# Read and parse results file. 
 with open("results.txt", "r") as file:
     for line in file:
         line = line.strip()
         if 'Participant Name' in line:
-            if participant_results is None:
-                participant_results = [[element.split(": ")[1] for element in line.split(", ")]]
-            else:
-                results.append(participant_results)
-                participant_results = [[element.split(": ")[1] for element in line.split(", ")]]
+            participant_results = {
+                "name":  line.split(", ")[0].split(": ")[1],
+                "haptic": line.split(", ")[1].split(": ")[1] == "True",
+                "trials": []
+            }
+            results.append(participant_results)
         else:
-            line = line.split(", ")
-            values = [line[0]] + [element.split(": ")[1] for element in line[1:]]
-            participant_results.append(values)
-    results.append(participant_results)
+            if "Passed: True" in line:
+                time_part, rest = line.split(", Passed: ")
+                timestamp = time_part.strip()
+                parts = rest.split(", ")
+                trial = {
+                    "timestamp": timestamp,
+                    "passed": parts[0] == "True",
+                    "time": float(parts[1].split(": ")[1]),
+                    "path_length": float(parts[2].split(": ")[1]),
+                    "damage": int(parts[3].split(": ")[1])
+                }
+                participant_results["trials"].append(trial)
 
+# Define plots for haptics and no haptics
 fig_nohap, axes_nohap = plt.subplots(3, 1, figsize=(7, 7))
 axes_nohap[0].set_xlabel("Trial#")
 axes_nohap[0].set_ylabel("Time")
-axes_nohap[0].set_title("time per trial")
+axes_nohap[0].set_title("Time per Trial (No Haptics)")
 axes_nohap[0].xaxis.set_major_locator(MaxNLocator(integer=True))
 axes_nohap[1].set_xlabel("Trial#")
-axes_nohap[1].set_ylabel("path length")
-axes_nohap[1].set_title("path length per trial")
+axes_nohap[1].set_ylabel("Path Length")
+axes_nohap[1].set_title("Path Length per Trial (No Haptics)")
 axes_nohap[1].xaxis.set_major_locator(MaxNLocator(integer=True))
 axes_nohap[2].set_xlabel("Trial#")
 axes_nohap[2].set_ylabel("Damage")
-axes_nohap[2].set_title("Damage per trial")
+axes_nohap[2].set_title("Damage per Trial (No Haptics)")
 axes_nohap[2].xaxis.set_major_locator(MaxNLocator(integer=True))
 
 fig_hap, axes_hap = plt.subplots(3, 1, figsize=(7, 7))
 axes_hap[0].set_xlabel("Trial#")
 axes_hap[0].set_ylabel("Time")
-axes_hap[0].set_title("time per trial")
+axes_hap[0].set_title("Time per Trial (Haptics)")
 axes_hap[0].xaxis.set_major_locator(MaxNLocator(integer=True))
 axes_hap[1].set_xlabel("Trial#")
-axes_hap[1].set_ylabel("path length")
-axes_hap[1].set_title("path length per trial")
+axes_hap[1].set_ylabel("Path Length")
+axes_hap[1].set_title("Path Length per Trial (Haptics)")
 axes_hap[1].xaxis.set_major_locator(MaxNLocator(integer=True))
 axes_hap[2].set_xlabel("Trial#")
 axes_hap[2].set_ylabel("Damage")
-axes_hap[2].set_title("Damage per trial")
+axes_hap[2].set_title("Damage per Trial (Haptics)")
 axes_hap[2].xaxis.set_major_locator(MaxNLocator(integer=True))
 
 colors = ['b', 'r', 'g', 'c', 'm', 'y', 'k']
-
+hap_times, hap_path_lengths, hap_damages = [], [], []
+nohap_times, nohap_path_lengths, nohap_damages = [], [], []
 for participant in results:
     time = []
     path_length = []
     damage = []
     color = colors[results.index(participant) % len(colors)]
-    for trial in participant[1:]: 
-        if 'True' in trial[1]:
-            time.append(float(trial[2]))
-            path_length.append(float(trial[3]))
-            damage.append(float(trial[4]))
-    print(participant[0], time, path_length, damage)
-
-
-    if 'True' in participant[0][1]:
+    for trial in participant["trials"]:
+        time.append(trial["time"])
+        path_length.append(trial["path_length"])
+        damage.append(trial["damage"])
+    # print averages per participant. TODO: not sure if needed
+    print(f"Participant: {participant['name']}, AVG Time: {np.mean(time)  }")
+    print(f"Participant: {participant['name']}, AVG Path Length {np.mean(path_length)}")
+    print(f"Participant: {participant['name']}, AVG damge {np.mean(damage)}")
+    axes = axes_hap if participant["haptic"] else axes_nohap
+    if participant["haptic"]:
         axes = axes_hap
+        hap_times.extend(time)
+        hap_path_lengths.extend(path_length)
+        hap_damages.extend(damage)
     else:
         axes = axes_nohap
-
-    axes[0].plot(range(len(time)), time, marker='o', color=color, label=participant[0][0])
+        nohap_times.extend(time)
+        nohap_path_lengths.extend(path_length)
+        nohap_damages.extend(damage)
+    
+    # Add participant to the plot 
+    axes[0].plot(range(len(time)), time, marker='o', color=color, label=participant['name'])
     axes[0].legend()
     axes[0].grid(True)
-    axes[1].plot(range(len(path_length)), path_length, marker='o', color=color, label=participant[0][0])
+    axes[1].plot(range(len(path_length)), path_length, marker='o', color=color, label=participant['name'])
     axes[1].legend()
     axes[1].grid(True)
-    axes[2].plot(range(len(damage)), damage, marker='o', color=color, label=participant[0][0])
+    axes[2].plot(range(len(damage)), damage, marker='o', color=color, label=participant['name'])
     axes[2].legend()
     axes[2].grid(True)
 
-
+# Show plots
 handles, labels = axes_hap[0].get_legend_handles_labels()
 fig_hap.legend(handles, labels, loc="upper left", fontsize=10)
 for ax in axes_hap:
@@ -87,8 +108,37 @@ handles, labels = axes_nohap[0].get_legend_handles_labels()
 fig_nohap.legend(handles, labels, loc="upper left", fontsize=10)
 for ax in axes_nohap:
     ax.legend().remove()
-
-
 fig_hap.tight_layout()
 fig_nohap.tight_layout()
 plt.show()
+
+# Calculate and plot averages
+print(f"Haptics AVG Time: {np.mean(hap_times)  }")
+print(f"Haptics AVG Path Length {np.mean(hap_path_lengths)}")
+print(f"Haptics AVG damge {np.mean(hap_damages)}")
+print(f"No Haptics AVG Time: {np.mean(nohap_times)  }")
+print(f"No Haptics AVG Path Length {np.mean(nohap_path_lengths)}")
+print(f"No Haptics AVG damge {np.mean(nohap_damages)}")
+
+
+
+
+# Compute standard deviations
+print("\n--- Standard Deviations ---")
+print(f"Haptics STD Time: {np.std(hap_times):.3f}")
+print(f"Haptics STD Path Length: {np.std(hap_path_lengths):.3f}")
+print(f"Haptics STD Damage: {np.std(hap_damages):.3f}")
+print(f"No Haptics STD Time: {np.std(nohap_times):.3f}")
+print(f"No Haptics STD Path Length: {np.std(nohap_path_lengths):.3f}")
+print(f"No Haptics STD Damage: {np.std(nohap_damages):.3f}")
+
+# Perform t-tests
+print("\n--- Independent t-tests (Haptics vs No Haptics) ---")
+t_stat_time, p_val_time = ttest_ind(hap_times, nohap_times, equal_var=False)
+t_stat_path, p_val_path = ttest_ind(hap_path_lengths, nohap_path_lengths, equal_var=False)
+t_stat_damage, p_val_damage = ttest_ind(hap_damages, nohap_damages, equal_var=False)
+
+print(f"Time - t-statistic: {t_stat_time:.3f}, p-value: {p_val_time:.4f}")
+print(f"Path Length - t-statistic: {t_stat_path:.3f}, p-value: {p_val_path:.4f}")
+print(f"Damage - t-statistic: {t_stat_damage:.3f}, p-value: {p_val_damage:.4f}")
+
